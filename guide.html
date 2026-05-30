@@ -1,0 +1,1498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GritAI · Claude Agent SDK Workshop — Python Companion</title>
+<style>
+  :root {
+    --ivory:  #FAF9F5;
+    --paper:  #FFFFFF;
+    --slate:  #141413;
+    --clay:   #D97757;
+    --clay-d: #B85C3E;
+    --oat:    #E3DACC;
+    --oat-d:  #C7B89E;
+    --olive:  #788C5D;
+    --olive-d:#5D6E47;
+    --g100:   #F0EEE6;
+    --g200:   #E6E3DA;
+    --g300:   #D1CFC5;
+    --g500:   #87867F;
+    --g700:   #3D3D3A;
+    --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--ivory);
+    color: var(--slate);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px 140px; }
+
+  /* ── masthead ─────────────────────────── */
+  header.masthead {
+    padding: 80px 0 56px;
+    border-bottom: 1.5px solid var(--g300);
+    margin-bottom: 12px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 48px;
+    align-items: end;
+  }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; } }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--g500);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 24px; height: 1.5px;
+    background: var(--clay);
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(38px, 5.4vw, 62px);
+    line-height: 1.06;
+    letter-spacing: -0.018em;
+    margin: 0 0 8px;
+    max-width: 16ch;
+  }
+  h1 em { font-style: italic; color: var(--clay); }
+  .intro {
+    font-size: 16.5px;
+    color: var(--g700);
+    margin: 22px 0 0;
+    max-width: 620px;
+  }
+  .intro code {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    background: var(--g100);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .intro a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+  .intro a:hover { text-decoration-color: var(--clay); }
+
+  /* Hero stack — the SDK arc as layered cards */
+  .hero-stack {
+    position: relative;
+    aspect-ratio: 5/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-card {
+    position: absolute;
+    border-radius: 12px;
+    border: 1.5px solid var(--g300);
+    background: var(--paper);
+    padding: 14px 16px;
+    font-size: 11.5px;
+    box-shadow: 0 8px 20px rgba(20,20,19,.04);
+  }
+  .hero-card .lbl {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--g500);
+    margin-bottom: 4px;
+  }
+  .hero-card .ttl {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .hc-1 { top: 6%; left: 0%; width: 56%; transform: rotate(-3deg); background: var(--g100); }
+  .hc-2 { top: 28%; left: 22%; width: 60%; transform: rotate(1.5deg); border-color: var(--olive); }
+  .hc-2 .lbl { color: var(--olive); }
+  .hc-3 { top: 50%; left: 8%; width: 64%; transform: rotate(-1.5deg); border-color: var(--oat-d); background: var(--oat); }
+  .hc-3 .lbl { color: var(--clay-d); }
+  .hc-4 {
+    top: 72%; left: 24%; width: 68%; transform: rotate(2deg);
+    border-color: var(--slate);
+    background: var(--paper);
+    box-shadow: 0 12px 28px rgba(20,20,19,.12);
+  }
+  .hc-4 .lbl { color: var(--clay); }
+  .hc-4 .ttl { font-style: italic; }
+
+  /* ── nav pills ────────────────────────── */
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 28px 0 0;
+  }
+  nav.toc a {
+    font-size: 12.5px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--g300);
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--g700);
+    background: var(--paper);
+    transition: border-color 120ms, color 120ms;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  nav.toc a .n {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--g500);
+  }
+  nav.toc a:hover { border-color: var(--slate); color: var(--slate); }
+  nav.toc a:hover .n { color: var(--clay); }
+
+  /* ── section heads ────────────────────── */
+  section { margin-top: 84px; scroll-margin-top: 28px; }
+  .sec-head {
+    display: flex; align-items: baseline; gap: 16px;
+    margin-bottom: 10px;
+  }
+  .sec-head .idx {
+    font-family: var(--mono);
+    font-size: 13px; color: var(--clay);
+    font-weight: 600; width: 34px; flex-shrink: 0;
+  }
+  .sec-head h2 {
+    font-family: var(--serif);
+    font-weight: 500; font-size: 28px;
+    margin: 0; letter-spacing: -0.012em;
+  }
+  .sec-head .count {
+    font-family: var(--mono);
+    font-size: 11px; color: var(--g500);
+    background: var(--g100);
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .sec-intro {
+    font-size: 14.5px; color: var(--g700);
+    max-width: 720px; margin: 0 0 28px 50px;
+  }
+  @media (max-width: 640px) { .sec-intro { margin-left: 0; } }
+
+  /* ── arc timeline ─────────────────────── */
+  .arc {
+    margin-left: 50px;
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 16px;
+    padding: 28px 32px 22px;
+  }
+  @media (max-width: 640px) { .arc { margin-left: 0; padding: 22px 16px; } }
+  .arc-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(14, minmax(0, 1fr));
+    gap: 8px;
+    align-items: end;
+    min-height: 110px;
+  }
+  .arc-track::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 26px;
+    height: 1.5px;
+    background: var(--g300);
+  }
+  .arc-node {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    position: relative;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .arc-node .dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--g500);
+    background: var(--paper);
+    transition: transform 150ms ease, border-color 150ms;
+    z-index: 2;
+  }
+  .arc-node .num {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--g500);
+    margin-top: 2px;
+  }
+  .arc-node .pill {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    color: var(--g700);
+    background: var(--g100);
+    border: 1px solid var(--g200);
+    padding: 2px 7px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    transform-origin: bottom center;
+  }
+  /* category colors */
+  .arc-node[data-cat="foundation"] .dot { border-color: var(--clay); background: var(--clay); }
+  .arc-node[data-cat="mcp"]        .dot { border-color: var(--olive); background: var(--olive); }
+  .arc-node[data-cat="skills"]     .dot { border-color: var(--clay-d); background: var(--oat); }
+  .arc-node[data-cat="io"]         .dot { border-color: var(--slate); background: var(--paper); }
+  .arc-node[data-cat="control"]    .dot { border-color: var(--slate); background: var(--slate); }
+  .arc-node[data-cat="capstone"]   .dot { border-color: var(--clay); background: var(--clay); transform: scale(1.4); }
+  .arc-node[data-cat="alt"]        .dot { border-color: var(--g500); background: var(--g300); }
+  .arc-node:hover .dot { transform: scale(1.35); }
+  .arc-node[data-cat="capstone"]:hover .dot { transform: scale(1.55); }
+  .arc-legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 20px; padding-top: 18px;
+    border-top: 1px solid var(--g200);
+    font-size: 12px; color: var(--g700);
+  }
+  .arc-legend .swatch {
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .arc-legend .sw {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 1.5px solid var(--g500);
+  }
+  .sw.foundation { background: var(--clay); border-color: var(--clay); }
+  .sw.mcp { background: var(--olive); border-color: var(--olive); }
+  .sw.skills { background: var(--oat); border-color: var(--clay-d); }
+  .sw.io { background: var(--paper); }
+  .sw.control { background: var(--slate); border-color: var(--slate); }
+  .sw.capstone { background: var(--clay); border-color: var(--clay); }
+  .sw.alt { background: var(--g300); border-color: var(--g500); }
+
+  /* ── setup block ──────────────────────── */
+  .setup {
+    margin-left: 50px;
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 760px) { .setup { grid-template-columns: 1fr; margin-left: 0; padding: 22px; } }
+  .setup h3 {
+    font-family: var(--serif);
+    font-size: 18px; font-weight: 500;
+    margin: 0 0 12px;
+  }
+  .setup ol {
+    margin: 0; padding-left: 22px;
+    font-size: 14.5px; color: var(--g700);
+    line-height: 1.7;
+  }
+  .setup ol code {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--g100);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .prereqs code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--g100);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .codeblock {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--slate);
+    color: var(--ivory);
+    padding: 16px 18px;
+    border-radius: 10px;
+    overflow-x: auto;
+    line-height: 1.65;
+    white-space: pre;
+  }
+  .codeblock .cmt { color: var(--g500); }
+  .codeblock .acc { color: var(--clay); }
+  .codeblock .str { color: var(--oat); }
+  .codeblock .kw  { color: var(--olive); }
+
+  /* ── concepts grid ────────────────────── */
+  .concepts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-left: 50px;
+  }
+  @media (max-width: 640px) { .concepts { margin-left: 0; } }
+  .concept {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 12px;
+    padding: 20px 22px 22px;
+    transition: border-color 150ms, transform 150ms;
+  }
+  .concept:hover { border-color: var(--slate); transform: translateY(-2px); }
+  .concept .ic {
+    width: 36px; height: 36px;
+    margin-bottom: 12px;
+  }
+  .concept h4 {
+    font-family: var(--serif);
+    font-size: 17px; font-weight: 500;
+    margin: 0 0 6px;
+  }
+  .concept p {
+    margin: 0; font-size: 13.5px;
+    color: var(--g700); line-height: 1.55;
+  }
+  .concept .ref {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--g500);
+  }
+  .concept .ref a { color: var(--clay); text-decoration: none; }
+  .concept .ref a:hover { text-decoration: underline; }
+
+  /* ── workshop plan ────────────────────── */
+  .phases {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-left: 50px;
+  }
+  @media (max-width: 980px) { .phases { grid-template-columns: 1fr; margin-left: 0; } }
+  .phase {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 14px;
+    padding: 24px 26px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .phase .phase-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--clay);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phase .phase-label .pnum {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--clay);
+    background: var(--oat);
+    border-radius: 999px;
+    padding: 2px 8px;
+    letter-spacing: 0.06em;
+  }
+  .phase h3 {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 500;
+    margin: 8px 0 10px;
+    letter-spacing: -0.005em;
+  }
+  .phase p {
+    margin: 0 0 16px;
+    font-size: 14px;
+    color: var(--g700);
+    line-height: 1.55;
+  }
+  .phase .steps {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: auto;
+  }
+  .phase .steps a {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border: 1px solid var(--g300);
+    border-radius: 999px;
+    color: var(--g700);
+    text-decoration: none;
+    background: var(--ivory);
+    transition: border-color 120ms, background 120ms;
+  }
+  .phase .steps a:hover { border-color: var(--clay); background: var(--paper); color: var(--clay); }
+  .phase .footnote {
+    font-size: 12.5px;
+    color: var(--g500);
+    font-style: italic;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--g200);
+  }
+
+  /* ── step cards ───────────────────────── */
+  .steps-grid {
+    display: grid;
+    gap: 20px;
+    margin-left: 50px;
+  }
+  @media (max-width: 640px) { .steps-grid { margin-left: 0; } }
+  details.step {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 150ms;
+  }
+  details.step[open] { border-color: var(--slate); }
+  details.step summary {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 18px;
+    align-items: center;
+    padding: 22px 24px;
+    cursor: pointer;
+    list-style: none;
+  }
+  details.step summary::-webkit-details-marker { display: none; }
+  details.step .stepnum {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--clay);
+    font-weight: 600;
+    line-height: 1;
+  }
+  details.step .stepnum .sub {
+    font-size: 12px;
+    color: var(--g500);
+    font-weight: 400;
+    display: block;
+    margin-top: 4px;
+  }
+  details.step .summary-body .ttl {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 500;
+    margin: 0 0 4px;
+    letter-spacing: -0.005em;
+  }
+  details.step .summary-body .desc {
+    font-size: 13.5px;
+    color: var(--g700);
+    line-height: 1.5;
+    margin: 0;
+  }
+  details.step .summary-body .tags {
+    margin-top: 8px;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  details.step .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border: 1px solid var(--g300);
+    border-radius: 999px;
+    color: var(--g700);
+    background: var(--ivory);
+  }
+  details.step .tag.cat-foundation { border-color: var(--clay); color: var(--clay-d); }
+  details.step .tag.cat-mcp        { border-color: var(--olive); color: var(--olive-d); }
+  details.step .tag.cat-skills     { border-color: var(--clay-d); color: var(--clay-d); background: var(--oat); }
+  details.step .tag.cat-io         { border-color: var(--slate); color: var(--slate); }
+  details.step .tag.cat-control    { border-color: var(--slate); color: var(--slate); background: var(--g100); }
+  details.step .tag.cat-capstone   { border-color: var(--clay); color: var(--paper); background: var(--clay); }
+  details.step .tag.cat-alt        { border-color: var(--g500); color: var(--g700); }
+  details.step .chevron {
+    font-family: var(--mono);
+    color: var(--g500);
+    font-size: 14px;
+    transition: transform 200ms;
+    align-self: center;
+  }
+  details.step[open] .chevron { transform: rotate(90deg); color: var(--clay); }
+
+  details.step .body {
+    padding: 0 24px 24px 98px;
+    border-top: 1px solid var(--g200);
+    margin-top: 0;
+  }
+  @media (max-width: 640px) { details.step .body { padding: 0 18px 22px; } }
+  details.step .body h5 {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--g500);
+    margin: 22px 0 8px;
+  }
+  details.step .body p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: var(--g700);
+    line-height: 1.6;
+  }
+  details.step .body ul {
+    margin: 8px 0 0;
+    padding-left: 22px;
+    font-size: 14px;
+    color: var(--g700);
+    line-height: 1.65;
+  }
+  details.step .body code:not(.codeblock code) {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--g100);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--clay-d);
+  }
+  .run {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: var(--slate);
+    color: var(--ivory);
+    padding: 12px 16px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .run .prompt { color: var(--clay); user-select: none; }
+  .run button {
+    background: transparent;
+    border: 1px solid var(--g500);
+    color: var(--g300);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: border-color 120ms, color 120ms;
+  }
+  .run button:hover { border-color: var(--clay); color: var(--clay); }
+  .run button.ok { border-color: var(--olive); color: var(--olive); }
+
+  /* ── footer ───────────────────────────── */
+  footer {
+    margin-top: 110px;
+    border-top: 1.5px solid var(--g300);
+    padding-top: 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--g500);
+  }
+  footer .k { font-family: var(--serif); font-style: italic; color: var(--g700); font-size: 15px; }
+  footer a { color: var(--clay); text-decoration-color: var(--oat); text-underline-offset: 3px; }
+
+  /* utility */
+  .controls {
+    display: flex; gap: 8px; align-items: center;
+    margin: 0 0 18px 50px;
+    font-size: 12.5px;
+  }
+  @media (max-width: 640px) { .controls { margin-left: 0; } }
+  .controls .label { color: var(--g500); margin-right: 4px; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .filter {
+    background: var(--paper);
+    border: 1.5px solid var(--g300);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--g700);
+    transition: border-color 120ms, background 120ms;
+  }
+  .filter[aria-pressed="true"] {
+    border-color: var(--slate);
+    background: var(--slate);
+    color: var(--ivory);
+  }
+  .filter:hover:not([aria-pressed="true"]) { border-color: var(--clay); color: var(--clay); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">GritAI · Workshop Companion · Python</div>
+        <h1>The Claude Agent SDK — from zero to <em>agent</em></h1>
+        <p class="intro">
+          Fourteen runnable steps from <code>messages.create()</code> to an agent that
+          actually does a job. Each step is one self-contained folder; one root
+          <code>uv sync --all-packages</code> sets up all of them. Open this page next to
+          your editor and pick wherever you want to start.
+        </p>
+        <nav class="toc">
+          <a href="#arc"><span class="n">·</span> The arc</a>
+          <a href="#setup"><span class="n">·</span> Setup</a>
+          <a href="#concepts"><span class="n">·</span> Concepts</a>
+          <a href="#day-plan"><span class="n">·</span> Plan</a>
+          <a href="#steps"><span class="n">·</span> Steps</a>
+        </nav>
+      </div>
+
+      <div class="hero-stack" aria-hidden="true">
+        <div class="hero-card hc-1">
+          <div class="lbl">step 0</div>
+          <div class="ttl">Raw API</div>
+        </div>
+        <div class="hero-card hc-2">
+          <div class="lbl">steps 2 – 3</div>
+          <div class="ttl">MCP servers</div>
+        </div>
+        <div class="hero-card hc-3">
+          <div class="lbl">step 4</div>
+          <div class="ttl">Skills</div>
+        </div>
+        <div class="hero-card hc-4">
+          <div class="lbl">step 10 · capstone</div>
+          <div class="ttl">Meeting-notes agent</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================== The arc ============================== -->
+  <section id="arc">
+    <div class="sec-head">
+      <span class="idx">01</span>
+      <h2>The arc, at a glance</h2>
+      <span class="count">14 steps</span>
+    </div>
+    <p class="sec-intro">
+      Each dot is one step. The colours group steps by what they teach: the foundation
+      primitive, MCP integration, skills, I/O surfaces, control mechanisms, and the
+      capstone that composes them. Click any dot to jump to the step.
+    </p>
+    <div class="arc">
+      <div class="arc-track">
+        <a class="arc-node" data-cat="foundation" href="#step-0"><span class="pill">raw</span><span class="dot"></span><span class="num">0</span></a>
+        <a class="arc-node" data-cat="foundation" href="#step-1"><span class="pill">loop</span><span class="dot"></span><span class="num">1</span></a>
+        <a class="arc-node" data-cat="mcp" href="#step-2"><span class="pill">mcp ext</span><span class="dot"></span><span class="num">2</span></a>
+        <a class="arc-node" data-cat="mcp" href="#step-2b"><span class="pill">built-in</span><span class="dot"></span><span class="num">2b</span></a>
+        <a class="arc-node" data-cat="mcp" href="#step-3"><span class="pill">mcp own</span><span class="dot"></span><span class="num">3</span></a>
+        <a class="arc-node" data-cat="mcp" href="#step-3b"><span class="pill">real api</span><span class="dot"></span><span class="num">3b</span></a>
+        <a class="arc-node" data-cat="skills" href="#step-4"><span class="pill">skills</span><span class="dot"></span><span class="num">4</span></a>
+        <a class="arc-node" data-cat="io" href="#step-5"><span class="pill">repl</span><span class="dot"></span><span class="num">5</span></a>
+        <a class="arc-node" data-cat="io" href="#step-6"><span class="pill">web</span><span class="dot"></span><span class="num">6</span></a>
+        <a class="arc-node" data-cat="control" href="#step-7"><span class="pill">subagents</span><span class="dot"></span><span class="num">7</span></a>
+        <a class="arc-node" data-cat="control" href="#step-8"><span class="pill">hooks</span><span class="dot"></span><span class="num">8</span></a>
+        <a class="arc-node" data-cat="control" href="#step-9"><span class="pill">perms</span><span class="dot"></span><span class="num">9</span></a>
+        <a class="arc-node" data-cat="capstone" href="#step-10"><span class="pill">capstone</span><span class="dot"></span><span class="num">10</span></a>
+        <a class="arc-node" data-cat="alt" href="#step-11"><span class="pill">alt sdk</span><span class="dot"></span><span class="num">11</span></a>
+      </div>
+      <div class="arc-legend">
+        <span class="swatch"><span class="sw foundation"></span> Foundation</span>
+        <span class="swatch"><span class="sw mcp"></span> MCP &amp; tools</span>
+        <span class="swatch"><span class="sw skills"></span> Skills</span>
+        <span class="swatch"><span class="sw io"></span> I/O surface</span>
+        <span class="swatch"><span class="sw control"></span> Control &amp; safety</span>
+        <span class="swatch"><span class="sw capstone"></span> Capstone</span>
+        <span class="swatch"><span class="sw alt"></span> Alternative SDK</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== Setup ============================== -->
+  <section id="setup">
+    <div class="sec-head">
+      <span class="idx">02</span>
+      <h2>One-time setup</h2>
+      <span class="count">~2 minutes</span>
+    </div>
+    <p class="sec-intro">
+      One install at the root, one <code>.env</code> file at the root, no per-folder
+      ceremony. After this you can run any step with <code>make step-N</code>.
+    </p>
+    <div class="setup">
+      <div style="grid-column: 1 / -1; border-bottom: 1px solid var(--g200); padding-bottom: 24px;">
+        <h3>Before you start</h3>
+        <div class="prereqs" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 24px; font-size: 13.5px; color: var(--g700); line-height: 1.6; margin-top: 4px;">
+          <div>
+            <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">Python 3.11+ &amp; uv</strong>
+            Check with <code>python3 --version</code>. The workspace pins <code>requires-python = "&gt;=3.11"</code>. Install <a href="https://docs.astral.sh/uv/" style="color: var(--clay); text-decoration: underline;">uv</a> with <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code> — it manages the venv and runs every step.
+          </div>
+          <div>
+            <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">An Anthropic API key</strong>
+            Create one at <a href="https://console.anthropic.com/settings/keys" style="color: var(--clay); text-decoration: underline;">console.anthropic.com</a> → API&nbsp;Keys. The steps make real API calls, so add a little <a href="https://console.anthropic.com/settings/billing" style="color: var(--clay); text-decoration: underline;">billing credit</a> — a dollar or two covers the whole workshop.
+          </div>
+          <div>
+            <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">No separate CLI install</strong>
+            The Agent SDK is a <a href="https://docs.claude.com/en/api/agent-sdk/overview" style="color: var(--clay); text-decoration: underline;">standalone package</a>: <code>claude-agent-sdk</code> ships a bundled Claude&nbsp;Code binary and uses it automatically — no <code>npm install -g</code>. Node 20+ is needed <em>only</em> for the <code>npx</code> filesystem MCP server in steps 2, 5 and 6.
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Three commands</h3>
+        <ol>
+          <li><code>git clone &lt;repo&gt; &amp;&amp; cd gritai-agentsdk-python-course</code></li>
+          <li><code>cp .env.example .env</code> — paste your <code>ANTHROPIC_API_KEY</code></li>
+          <li><code>uv sync --all-packages</code> — installs all 14 workspace members</li>
+        </ol>
+        <h3 style="margin-top: 22px;">Then any time</h3>
+        <ol>
+          <li><code>make step-1</code> — smallest agent loop</li>
+          <li><code>make step-10</code> — the capstone</li>
+          <li><code>make typecheck</code> — mypy across the workspace</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Your <code>.env</code></h3>
+<div class="codeblock"><span class="cmt"># Required for every Claude step</span>
+ANTHROPIC_API_KEY=<span class="str">sk-ant-...</span>
+
+<span class="cmt"># Optional — only step 11 (Ollama)</span>
+<span class="cmt"># OLLAMA_MODEL=llama3.3</span></div>
+        <h3 style="margin-top: 22px;">Why no <code>python-dotenv</code>?</h3>
+        <p style="margin: 0; font-size: 13.5px; color: var(--g700);">
+          uv has <code>--env-file</code> built in. Every <code>make step-N</code> target runs
+          <code>uv run --env-file=.env ...</code>, which loads the root <code>.env</code> into
+          <code>os.environ</code> before Python starts — so the root <code>.env</code> is the
+          single source of truth, with no <code>load_dotenv()</code> line in any source file.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== Concepts ============================== -->
+  <section id="concepts">
+    <div class="sec-head">
+      <span class="idx">03</span>
+      <h2>Five concepts you'll use</h2>
+      <span class="count">5 ideas</span>
+    </div>
+    <p class="sec-intro">
+      Everything the SDK adds is a variation on one of these. Once you see how they
+      compose, the capstone reads like ordinary code.
+    </p>
+    <div class="concepts">
+      <div class="concept">
+        <svg class="ic" viewBox="0 0 40 40" fill="none">
+          <rect x="4" y="6" width="14" height="14" rx="2.5" stroke="#788C5D" stroke-width="2"/>
+          <rect x="22" y="6" width="14" height="14" rx="2.5" stroke="#788C5D" stroke-width="2"/>
+          <rect x="13" y="22" width="14" height="14" rx="2.5" stroke="#D97757" stroke-width="2" fill="#E3DACC"/>
+          <path d="M11 20 L18 24" stroke="#87867F" stroke-width="1.5"/>
+          <path d="M29 20 L22 24" stroke="#87867F" stroke-width="1.5"/>
+        </svg>
+        <h4>MCP servers</h4>
+        <p>A standard way to attach tools to a model. Use an external one (e.g. the filesystem server), or write your own in Python as an in-process server with <code>create_sdk_mcp_server</code>.</p>
+        <div class="ref"><a href="#step-2">step 2</a> · <a href="#step-3">step 3</a></div>
+      </div>
+      <div class="concept">
+        <svg class="ic" viewBox="0 0 40 40" fill="none">
+          <rect x="6" y="6" width="28" height="28" rx="3" stroke="#3D3D3A" stroke-width="2" fill="#FFF"/>
+          <path d="M11 14 H29" stroke="#87867F" stroke-width="1.8"/>
+          <path d="M11 20 H24" stroke="#87867F" stroke-width="1.8"/>
+          <path d="M11 26 H21" stroke="#D97757" stroke-width="2.4"/>
+        </svg>
+        <h4>Built-in tools</h4>
+        <p><code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Bash</code>, <code>Glob</code>, <code>Grep</code> — the same toolset Claude Code uses, no MCP needed for local file work.</p>
+        <div class="ref"><a href="#step-2b">step 2b</a></div>
+      </div>
+      <div class="concept">
+        <svg class="ic" viewBox="0 0 40 40" fill="none">
+          <path d="M20 5 L31 11 L31 23 L20 29 L9 23 L9 11 Z" stroke="#B85C3E" stroke-width="2" fill="#E3DACC"/>
+          <circle cx="20" cy="17" r="3.5" fill="#D97757"/>
+          <path d="M20 21 V32" stroke="#B85C3E" stroke-width="2"/>
+        </svg>
+        <h4>Skills</h4>
+        <p>Plain-Markdown files in <code>.claude/skills/</code>. The agent auto-discovers them and pulls one in when its description matches the task — no code change to swap behaviour.</p>
+        <div class="ref"><a href="#step-4">step 4</a></div>
+      </div>
+      <div class="concept">
+        <svg class="ic" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="13" stroke="#141413" stroke-width="2" fill="#FFF"/>
+          <path d="M20 9 V13" stroke="#141413" stroke-width="2"/>
+          <path d="M20 27 V31" stroke="#141413" stroke-width="2"/>
+          <path d="M9 20 H13" stroke="#141413" stroke-width="2"/>
+          <path d="M27 20 H31" stroke="#141413" stroke-width="2"/>
+          <circle cx="20" cy="20" r="3.5" fill="#D97757"/>
+        </svg>
+        <h4>Hooks &amp; permissions</h4>
+        <p>Intercept every tool call before it runs. <code>PreToolUse</code> hooks log, deny, or rewrite; <code>can_use_tool</code> asks a human; <code>permission_mode</code> picks the default policy.</p>
+        <div class="ref"><a href="#step-8">step 8</a> · <a href="#step-9">step 9</a></div>
+      </div>
+      <div class="concept">
+        <svg class="ic" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="10" r="5" stroke="#D97757" stroke-width="2" fill="#FFF"/>
+          <circle cx="9"  cy="29" r="4" stroke="#3D3D3A" stroke-width="2" fill="#F0EEE6"/>
+          <circle cx="20" cy="30" r="4" stroke="#3D3D3A" stroke-width="2" fill="#F0EEE6"/>
+          <circle cx="31" cy="29" r="4" stroke="#3D3D3A" stroke-width="2" fill="#F0EEE6"/>
+          <path d="M18 14 L11 25" stroke="#87867F" stroke-width="1.5"/>
+          <path d="M20 15 V26" stroke="#87867F" stroke-width="1.5"/>
+          <path d="M22 14 L29 25" stroke="#87867F" stroke-width="1.5"/>
+        </svg>
+        <h4>Subagents</h4>
+        <p>Decompose a job into specialists with their own prompt and tool whitelist. The main agent dispatches to them with the built-in <code>Task</code> tool.</p>
+        <div class="ref"><a href="#step-7">step 7</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== Workshop plan ============================== -->
+  <section id="day-plan">
+    <div class="sec-head">
+      <span class="idx">04</span>
+      <h2>Workshop plan</h2>
+      <span class="count">3 phases</span>
+    </div>
+    <p class="sec-intro">
+      A suggested order through the steps, grouped by what each phase builds. Skip around
+      if you're self-paced — every step is standalone — but the phases land cleanly back-to-back
+      in a live workshop.
+    </p>
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-label"><span class="pnum">phase 1</span> Build the loop</div>
+        <h3>The agent loop &amp; its tools</h3>
+        <p>From the raw API to an agent that calls a real-world tool. By the end you can wire the SDK to anything that speaks HTTP or stdio.</p>
+        <div class="steps">
+          <a href="#step-0">0</a><a href="#step-1">1</a><a href="#step-2">2</a><a href="#step-2b">2b</a><a href="#step-3">3</a><a href="#step-3b">3b</a>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-label"><span class="pnum">phase 2</span> Teach it well</div>
+        <h3>Skills &amp; decomposition</h3>
+        <p>Skills change behaviour without changing code. Subagents split a big job into specialists. Together they're how an agent gets <em>good</em> at something.</p>
+        <div class="steps">
+          <a href="#step-4">4</a><a href="#step-7">7</a>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="phase-label"><span class="pnum">phase 3</span> Put it to work</div>
+        <h3>I/O, control, composition</h3>
+        <p>Wrap the agent in a real interface, watch every tool call, keep a human in the loop — then assemble it all into the capstone. End with a contrast lesson on an alternative SDK.</p>
+        <div class="steps">
+          <a href="#step-5">5</a><a href="#step-6">6</a><a href="#step-8">8</a><a href="#step-9">9</a><a href="#step-10">10 ★</a><a href="#step-11">11</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== Steps ============================== -->
+  <section id="steps">
+    <div class="sec-head">
+      <span class="idx">05</span>
+      <h2>Every step, in order</h2>
+      <span class="count">14 steps</span>
+    </div>
+    <p class="sec-intro">
+      Each step is a card you can expand for the key code, the command to run it,
+      what to watch for, and one thing to try once it's running.
+    </p>
+
+    <div class="controls" id="filter-controls">
+      <span class="label">Filter</span>
+      <button class="filter" data-filter="all" aria-pressed="true">All</button>
+      <button class="filter" data-filter="foundation" aria-pressed="false">Foundation</button>
+      <button class="filter" data-filter="mcp" aria-pressed="false">MCP</button>
+      <button class="filter" data-filter="skills" aria-pressed="false">Skills</button>
+      <button class="filter" data-filter="io" aria-pressed="false">I/O</button>
+      <button class="filter" data-filter="control" aria-pressed="false">Control</button>
+      <button class="filter" data-filter="capstone" aria-pressed="false">Capstone</button>
+      <button class="filter" data-filter="alt" aria-pressed="false">Alt SDK</button>
+    </div>
+
+    <div class="steps-grid" id="steps-grid">
+
+      <details class="step" id="step-0" data-cat="foundation">
+        <summary>
+          <div class="stepnum">0<span class="sub">raw api</span></div>
+          <div class="summary-body">
+            <div class="ttl">The raw Anthropic SDK</div>
+            <p class="desc">One <code>messages.create()</code> call. No Agent SDK, no tools — just the primitive everything else is built on.</p>
+            <div class="tags">
+              <span class="tag cat-foundation">foundation</span>
+              <span class="tag">anthropic</span>
+              <span class="tag">messages.create</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-0 <button onclick="copyCmd(this,'make step-0')">copy</button></div>
+          <h5>The core call</h5>
+<div class="codeblock"><span class="kw">from</span> anthropic <span class="kw">import</span> AsyncAnthropic
+
+client = AsyncAnthropic()
+response = <span class="kw">await</span> client.messages.create(
+    model=<span class="str">"claude-sonnet-4-6"</span>,
+    max_tokens=1024,
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain what an AI agent is in three sentences."</span>}],
+)</div>
+          <h5>What you'll see</h5>
+          <p>Three sentences of plain text, then the token usage and stop reason. No loop, no tool calls — just one round-trip.</p>
+          <h5>Try this</h5>
+          <p>Change the prompt to ask Claude to <em>run</em> a tool ("read this file"). It will <em>describe</em> running one but can't actually act — that's exactly the gap the Agent SDK closes in step 1.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-1" data-cat="foundation">
+        <summary>
+          <div class="stepnum">1<span class="sub">loop</span></div>
+          <div class="summary-body">
+            <div class="ttl">Smallest possible Agent SDK program</div>
+            <p class="desc">One <code>query()</code> call, an async iterable of messages, no tools. The loop is the SDK; the SDK is the loop.</p>
+            <div class="tags">
+              <span class="tag cat-foundation">foundation</span>
+              <span class="tag">query()</span>
+              <span class="tag">async for</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-1 <button onclick="copyCmd(this,'make step-1')">copy</button></div>
+          <h5>The whole program</h5>
+<div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> (AssistantMessage, ClaudeAgentOptions,
+                              ResultMessage, TextBlock, query)
+
+options = ClaudeAgentOptions(model=<span class="str">"claude-sonnet-4-6"</span>)
+<span class="kw">async for</span> message <span class="kw">in</span> query(prompt=<span class="str">"Explain what an AI agent is."</span>, options=options):
+    <span class="kw">if</span> isinstance(message, AssistantMessage):
+        <span class="kw">for</span> block <span class="kw">in</span> message.content:
+            <span class="kw">if</span> isinstance(block, TextBlock):
+                print(block.text, end=<span class="str">""</span>)
+    <span class="kw">elif</span> isinstance(message, ResultMessage):
+        print(<span class="acc">f"Cost: ${message.total_cost_usd:.6f}"</span>)</div>
+          <h5>Key idea</h5>
+          <p>The stream emits typed messages: a <code>SystemMessage</code> (init), one or more <code>AssistantMessage</code> with content blocks, and a final <code>ResultMessage</code> with cost. Check them with <code>isinstance()</code>. With no tools allowed you'll only ever see <code>TextBlock</code>s — tool-use blocks show up from step 2.</p>
+          <h5>Heads-up</h5>
+          <p>In Python the content is right on <code>message.content</code> — no nested <code>.message.content</code> wrapper like the TypeScript SDK has.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-2" data-cat="mcp">
+        <summary>
+          <div class="stepnum">2<span class="sub">mcp ext</span></div>
+          <div class="summary-body">
+            <div class="ttl">External MCP — the filesystem server</div>
+            <p class="desc">Plug in an external stdio MCP server (the official filesystem one) and let the agent write a haiku to a sandbox folder.</p>
+            <div class="tags">
+              <span class="tag cat-mcp">mcp</span>
+              <span class="tag">mcp_servers</span>
+              <span class="tag">allowed_tools</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-2 <button onclick="copyCmd(this,'make step-2')">copy</button></div>
+          <h5>Key shape</h5>
+<div class="codeblock">mcp_servers={
+    <span class="str">"fs"</span>: {  <span class="cmt"># the key becomes the tool prefix: mcp__fs__*</span>
+        <span class="str">"type"</span>: <span class="str">"stdio"</span>,
+        <span class="str">"command"</span>: <span class="str">"npx"</span>,
+        <span class="str">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"@modelcontextprotocol/server-filesystem"</span>, str(SANDBOX_DIR)],
+    },
+},
+allowed_tools=[
+    <span class="str">"mcp__fs__write_file"</span>,
+    <span class="str">"mcp__fs__read_text_file"</span>,  <span class="cmt"># newer name the server now prefers</span>
+],</div>
+          <h5>The #1 footgun</h5>
+          <p>MCP tools are denied by default. You <strong>must</strong> whitelist them. Wildcards work (<code>mcp__fs__*</code>); explicit names give you least-privilege.</p>
+          <h5>Heads-up</h5>
+          <p>This is the one place a step needs Node on your PATH — <code>npx</code> downloads and launches the filesystem server. The Agent SDK itself doesn't need it.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-2b" data-cat="mcp">
+        <summary>
+          <div class="stepnum">2b<span class="sub">built-in</span></div>
+          <div class="summary-body">
+            <div class="ttl">Built-in tools — no MCP needed</div>
+            <p class="desc">The SDK ships <code>Read</code>, <code>Write</code>, <code>Edit</code>, <code>Bash</code>, <code>Glob</code>, <code>Grep</code>. Reach for MCP for <em>external</em> services; use built-ins for local files.</p>
+            <div class="tags">
+              <span class="tag cat-mcp">mcp</span>
+              <span class="tag">built-in tools</span>
+              <span class="tag">add_dirs</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-2b <button onclick="copyCmd(this,'make step-2b')">copy</button></div>
+          <h5>The change from step 2</h5>
+<div class="codeblock">options = ClaudeAgentOptions(
+    model=<span class="str">"claude-sonnet-4-6"</span>,
+    allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Write"</span>, <span class="str">"Bash"</span>],  <span class="cmt"># bare names, no mcp__ prefix</span>
+    add_dirs=[SANDBOX_DIR],                     <span class="cmt"># grants file-tool access outside cwd</span>
+)</div>
+          <h5>Read the small print</h5>
+          <p><code>allowed_tools</code> is an <em>auto-approve</em> list, not an availability whitelist. An agent with <code>allowed_tools=["Read","Write"]</code> can still call <code>Bash</code> at runtime — to actually remove a tool, use <code>disallowed_tools</code>. The capstone (step 10) uses both.</p>
+          <h5>Try this</h5>
+          <p>Edit the prompt to ask the agent to run <code>ls</code> via <code>Bash</code> first. Then add <code>disallowed_tools=["Bash"]</code> and rerun — it will refuse and pick a different approach.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-3" data-cat="mcp">
+        <summary>
+          <div class="stepnum">3<span class="sub">mcp own</span></div>
+          <div class="summary-body">
+            <div class="ttl">A custom MCP server in Python</div>
+            <p class="desc">Define your own tools with the <code>@tool</code> decorator + <code>create_sdk_mcp_server</code>. Canned weather data here — the next step turns this into a real API.</p>
+            <div class="tags">
+              <span class="tag cat-mcp">mcp</span>
+              <span class="tag">@tool</span>
+              <span class="tag">create_sdk_mcp_server</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-3 <button onclick="copyCmd(this,'make step-3')">copy</button></div>
+          <h5>Defining a tool</h5>
+<div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> create_sdk_mcp_server, tool
+
+<span class="acc">@tool</span>(<span class="str">"getWeather"</span>, <span class="str">"Get the current weather for a city."</span>, {<span class="str">"city"</span>: str})
+<span class="kw">async def</span> get_weather(args: dict) -> dict:
+    city = args[<span class="str">"city"</span>]
+    w = FAKE_WEATHER.get(city, {<span class="str">"description"</span>: <span class="str">"Sunny"</span>, <span class="str">"tempC"</span>: 22})
+    <span class="kw">return</span> {<span class="str">"content"</span>: [{<span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: <span class="acc">f"{city}: {w['description']}, {w['tempC']}°C"</span>}]}
+
+weather_server = create_sdk_mcp_server(name=<span class="str">"weather"</span>, version=<span class="str">"1.0.0"</span>,
+                                       tools=[get_weather, get_forecast])</div>
+          <h5>The big lever</h5>
+          <p>The description string is what the model reads to decide <em>when</em> to call the tool. Write it well — this is the single biggest lever on tool-use quality.</p>
+          <h5>Heads-up</h5>
+          <p>The third arg is the input schema in shorthand form — a dict of <code>{"field": type}</code>. It can't express min/max, so clamp values in code. Mount the server with <code>mcp_servers={"weather": weather_server}</code>.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-3b" data-cat="mcp">
+        <summary>
+          <div class="stepnum">3b<span class="sub">real api</span></div>
+          <div class="summary-body">
+            <div class="ttl">Same tool, calling a real API</div>
+            <p class="desc">The handler now hits <a href="https://open-meteo.com">Open-Meteo</a> over <code>httpx</code>. No API key, no fuss — and the agent gets actual weather.</p>
+            <div class="tags">
+              <span class="tag cat-mcp">mcp</span>
+              <span class="tag">httpx</span>
+              <span class="tag">open-meteo</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-3b <button onclick="copyCmd(this,'make step-3b')">copy</button></div>
+          <h5>The payoff</h5>
+          <p>The agent doesn't know or care that the tool changed. From its point of view, "getWeather" is the same tool — except now it returns real, current data.</p>
+          <h5>The pattern</h5>
+<div class="codeblock"><span class="kw">import</span> httpx
+
+<span class="kw">async def</span> get_weather(args: dict) -> dict:
+    <span class="kw">async with</span> httpx.AsyncClient() <span class="kw">as</span> client:
+        place = <span class="kw">await</span> geocode(client, args[<span class="str">"city"</span>])
+        <span class="kw">if</span> place <span class="kw">is</span> None:
+            <span class="kw">return</span> friendly(<span class="acc">f"Couldn't find \"{args['city']}\"."</span>)
+        resp = <span class="kw">await</span> client.get(<span class="str">"https://api.open-meteo.com/v1/forecast"</span>,
+            params={<span class="str">"latitude"</span>: place[<span class="str">"latitude"</span>], <span class="str">"longitude"</span>: place[<span class="str">"longitude"</span>],
+                    <span class="str">"current"</span>: <span class="str">"temperature_2m,weather_code"</span>}, timeout=10.0)
+        <span class="kw">return</span> {<span class="str">"content"</span>: [{<span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: format(resp.json())}]}</div>
+          <p>When a fetch fails, return a friendly message — the agent reads it as a tool result and recovers gracefully.</p>
+          <h5>Try this</h5>
+          <p>Add a third tool — <code>getAirQuality</code>, also via Open-Meteo. Add it to <code>allowed_tools</code> and watch the agent pick the right one for the question.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-4" data-cat="skills">
+        <summary>
+          <div class="stepnum">4<span class="sub">skills</span></div>
+          <div class="summary-body">
+            <div class="ttl">Skills — Markdown files that change behaviour</div>
+            <p class="desc">A skill is a folder under <code>.claude/skills/&lt;name&gt;/SKILL.md</code>. The agent reads the description and pulls the body in when the task matches.</p>
+            <div class="tags">
+              <span class="tag cat-skills">skills</span>
+              <span class="tag">setting_sources</span>
+              <span class="tag">.claude/skills/</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-4 <button onclick="copyCmd(this,'make step-4')">copy</button></div>
+          <h5>The whole "code" change</h5>
+<div class="codeblock">options = ClaudeAgentOptions(
+    model=<span class="str">"claude-sonnet-4-6"</span>,
+    setting_sources=[<span class="str">"project"</span>],   <span class="cmt"># scope discovery to this folder</span>
+)</div>
+          <h5>Read the small print</h5>
+          <p>The SDK default loads all sources (<code>user</code> + <code>project</code> + <code>local</code>) — <strong>not</strong> empty. So <code>.claude/skills/</code> already loads even if you omit <code>setting_sources</code>. Passing <code>["project"]</code> scopes discovery to this folder (reproducible workshop runs); passing <code>[]</code> is the SDK's <em>isolation mode</em> and is the real way to disable skills.</p>
+          <h5>Try this</h5>
+          <p>Set <code>setting_sources=[]</code> and rerun — the agent emits unstructured prose with no error. Then put it back to <code>["project"]</code> and watch the skill kick in and produce the templated output.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-5" data-cat="io">
+        <summary>
+          <div class="stepnum">5<span class="sub">repl</span></div>
+          <div class="summary-body">
+            <div class="ttl">Multi-turn terminal REPL</div>
+            <p class="desc">Type, the agent answers, type again — keeping context. Two approaches in the same folder: <code>resume</code> per turn, or one query alive over a stream.</p>
+            <div class="tags">
+              <span class="tag cat-io">i/o</span>
+              <span class="tag">resume</span>
+              <span class="tag">streaming-input</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-5 <button onclick="copyCmd(this,'make step-5')">copy</button></div>
+          <div class="run" style="margin-top: 10px;"><span class="prompt">$</span> make step-5-streaming <button onclick="copyCmd(this,'make step-5-streaming')">copy</button></div>
+          <h5>The resume pattern</h5>
+<div class="codeblock"><span class="kw">from</span> dataclasses <span class="kw">import</span> replace
+
+session_id: str | None = None
+<span class="kw">while</span> True:
+    user_input = <span class="kw">await</span> prompt(<span class="str">"you > "</span>)
+    turn_options = replace(base_options, resume=session_id) <span class="kw">if</span> session_id <span class="kw">else</span> base_options
+    <span class="kw">async for</span> message <span class="kw">in</span> query(prompt=user_input, options=turn_options):
+        <span class="kw">if</span> isinstance(message, SystemMessage) <span class="kw">and</span> message.subtype == <span class="str">"init"</span>:
+            session_id = message.data.get(<span class="str">"session_id"</span>)
+        <span class="cmt"># ...print text...</span></div>
+          <h5>About the agent setup</h5>
+          <p>The agent itself (system prompt, allowed tools) lives in <code>agent.py</code>. The streaming-input variant (<code>main_streaming.py</code>) keeps one <code>query()</code> alive and feeds it an async generator of user-message dicts instead of calling <code>query()</code> per turn.</p>
+          <h5>Heads-up</h5>
+          <p><code>ClaudeAgentOptions</code> is a dataclass — use <code>dataclasses.replace()</code> to set <code>resume</code> for a turn rather than mutating the shared instance.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-6" data-cat="io">
+        <summary>
+          <div class="stepnum">6<span class="sub">web</span></div>
+          <div class="summary-body">
+            <div class="ttl">Same agent, behind a FastAPI UI</div>
+            <p class="desc">SSE streaming with token-by-token deltas via <code>include_partial_messages</code>. The agent code didn't change — just the I/O surface.</p>
+            <div class="tags">
+              <span class="tag cat-io">i/o</span>
+              <span class="tag">FastAPI</span>
+              <span class="tag">SSE</span>
+              <span class="tag">include_partial_messages</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-6 <button onclick="copyCmd(this,'make step-6')">copy</button></div>
+          <p style="font-size: 13.5px;">Opens at <code>http://localhost:8000</code>.</p>
+          <h5>The streaming bit</h5>
+<div class="codeblock">base_options.include_partial_messages = True   <span class="cmt"># raw content_block_delta events</span>
+
+<span class="kw">async for</span> msg <span class="kw">in</span> query(prompt=message, options=base_options):
+    <span class="kw">if</span> isinstance(msg, StreamEvent):
+        ev = msg.event
+        <span class="kw">if</span> ev.get(<span class="str">"type"</span>) == <span class="str">"content_block_delta"</span>:
+            delta = ev.get(<span class="str">"delta"</span>) <span class="kw">or</span> {}
+            <span class="kw">if</span> delta.get(<span class="str">"type"</span>) == <span class="str">"text_delta"</span>:
+                <span class="kw">yield</span> _sse({<span class="str">"type"</span>: <span class="str">"text"</span>, <span class="str">"text"</span>: delta.get(<span class="str">"text"</span>, <span class="str">""</span>)})</div>
+          <h5>The shape of it</h5>
+          <p>The endpoint is a <code>POST /api/chat</code> returning a <code>StreamingResponse</code> with <code>media_type="text/event-stream"</code>. <code>_sse(payload)</code> just formats <code>f"data: {json.dumps(payload)}\n\n"</code>.</p>
+          <h5>Try this</h5>
+          <p>Open the Network panel and watch the SSE stream. Each <code>data: {"type": "text", "text": "..."}</code> line is one token-ish chunk arriving from Claude.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-7" data-cat="control">
+        <summary>
+          <div class="stepnum">7<span class="sub">subagents</span></div>
+          <div class="summary-body">
+            <div class="ttl">Delegate to specialist subagents</div>
+            <p class="desc">A coordinator agent dispatches to a <code>code-reviewer</code> and a <code>test-planner</code> via the built-in <code>Task</code> tool. Each subagent has its own prompt and toolset.</p>
+            <div class="tags">
+              <span class="tag cat-control">control</span>
+              <span class="tag">agents</span>
+              <span class="tag">AgentDefinition</span>
+              <span class="tag">Task tool</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-7 <button onclick="copyCmd(this,'make step-7')">copy</button></div>
+          <h5>The shape</h5>
+<div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> AgentDefinition
+
+options = ClaudeAgentOptions(
+    model=<span class="str">"claude-sonnet-4-6"</span>,
+    allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Task"</span>],   <span class="cmt"># Task = how the coordinator dispatches</span>
+    agents={
+        <span class="str">"code-reviewer"</span>: AgentDefinition(
+            description=<span class="str">"Reviews code for bugs, security, and code smells."</span>,
+            prompt=<span class="str">"You are a senior code reviewer. ..."</span>,
+            tools=[<span class="str">"Read"</span>, <span class="str">"Grep"</span>],
+        ),
+        <span class="str">"test-planner"</span>: AgentDefinition(description=<span class="str">"..."</span>, prompt=<span class="str">"..."</span>, tools=[<span class="str">"Read"</span>]),
+    },
+)</div>
+          <h5>Why decompose?</h5>
+          <p>Each subagent runs in its own context window. The main agent doesn't have to hold a code review and a test plan in its head — it just dispatches and synthesises the returned bullets.</p>
+          <h5>Heads-up</h5>
+          <p><code>AgentDefinition</code> is the one place the Python SDK keeps camelCase fields (<code>disallowedTools</code>, <code>mcpServers</code>) — and it must be the dataclass, not a plain dict.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-8" data-cat="control">
+        <summary>
+          <div class="stepnum">8<span class="sub">hooks</span></div>
+          <div class="summary-body">
+            <div class="ttl">Hooks — intercept every tool call</div>
+            <p class="desc">A <code>PreToolUse</code> hook for observability (log every call) and another for safety (block <code>rm</code>/<code>sudo</code>). Pure async functions in your process.</p>
+            <div class="tags">
+              <span class="tag cat-control">control</span>
+              <span class="tag">PreToolUse</span>
+              <span class="tag">HookMatcher</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-8 <button onclick="copyCmd(this,'make step-8')">copy</button></div>
+          <h5>The deny hook</h5>
+<div class="codeblock"><span class="kw">async def</span> block_dangerous_bash(input_data, tool_use_id, context):
+    cmd = input_data.get(<span class="str">"tool_input"</span>, {}).get(<span class="str">"command"</span>, <span class="str">""</span>) <span class="kw">or</span> <span class="str">""</span>
+    <span class="kw">if</span> re.search(<span class="str">r"\brm\b"</span>, cmd, re.I) <span class="kw">or</span> re.search(<span class="str">r"\bsudo\b"</span>, cmd, re.I):
+        <span class="kw">return</span> {<span class="str">"hookSpecificOutput"</span>: {
+            <span class="str">"hookEventName"</span>: <span class="str">"PreToolUse"</span>,
+            <span class="str">"permissionDecision"</span>: <span class="str">"deny"</span>,
+            <span class="str">"permissionDecisionReason"</span>: <span class="str">"rm/sudo not allowed in this demo."</span>,
+        }}
+    <span class="kw">return</span> {}   <span class="cmt"># continue normally</span>
+
+options = ClaudeAgentOptions(hooks={<span class="str">"PreToolUse"</span>: [
+    HookMatcher(hooks=[log_tool_calls]),                   <span class="cmt"># every tool</span>
+    HookMatcher(matcher=<span class="str">"Bash"</span>, hooks=[block_dangerous_bash]),  <span class="cmt"># Bash only</span>
+]})</div>
+          <h5>What you'll see</h5>
+          <p>The agent writes <code>notes.txt</code>, then tries <code>rm notes.txt</code>. The hook prints its block line, the deny short-circuits before the shell ever runs, and the agent gets a tool result it can recover from.</p>
+          <h5>Heads-up</h5>
+          <p>The hook return value uses camelCase keys (<code>hookSpecificOutput</code>, <code>permissionDecision</code>) — the same wire format as the TypeScript SDK. Empty <code>{}</code> means continue.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-9" data-cat="control">
+        <summary>
+          <div class="stepnum">9<span class="sub">perms</span></div>
+          <div class="summary-body">
+            <div class="ttl">Interactive permissions — the human in the loop</div>
+            <p class="desc">The "Claude wants to write pizza.txt — allow?" prompt, implemented in a small async callback.</p>
+            <div class="tags">
+              <span class="tag cat-control">control</span>
+              <span class="tag">can_use_tool</span>
+              <span class="tag">permission_mode</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-9 <button onclick="copyCmd(this,'make step-9')">copy</button></div>
+          <h5>The callback</h5>
+<div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> PermissionResultAllow, PermissionResultDeny
+
+<span class="kw">async def</span> can_use_tool(tool_name, tool_input, context):
+    answer = (<span class="kw">await</span> asyncio.to_thread(input, <span class="str">"[y]es / [n]o / [a]lways > "</span>)).strip().lower()
+    <span class="kw">if</span> answer <span class="kw">in</span> (<span class="str">"y"</span>, <span class="str">""</span>):
+        <span class="kw">return</span> PermissionResultAllow(updated_input=tool_input)
+    <span class="kw">return</span> PermissionResultDeny(message=<span class="acc">f"User declined {tool_name}. Don't retry."</span>)
+
+options = ClaudeAgentOptions(
+    allowed_tools=[],            <span class="cmt"># empty so EVERY call routes through can_use_tool</span>
+    can_use_tool=can_use_tool,
+    permission_mode=<span class="str">"default"</span>,   <span class="cmt"># default / acceptEdits / plan / dontAsk / bypassPermissions</span>
+)</div>
+          <h5>Decision order</h5>
+          <ul>
+            <li>Is the tool in <code>allowed_tools</code>? — auto-run</li>
+            <li>Do <code>PreToolUse</code> hooks say deny? — block (step 8)</li>
+            <li>Else, call <code>can_use_tool</code> if present</li>
+            <li>Else default to deny</li>
+          </ul>
+          <h5>Heads-up</h5>
+          <p><code>can_use_tool</code> only returns allow/deny — the "ask" outcome belongs to <em>hook</em> output, not this callback.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-10" data-cat="capstone">
+        <summary>
+          <div class="stepnum">10<span class="sub">★ capstone</span></div>
+          <div class="summary-body">
+            <div class="ttl">The capstone — a meeting-notes agent</div>
+            <p class="desc">Composes built-ins + a skill + a hook into one useful agent. Reads <code>transcripts/*.txt</code>, writes formatted <code>output/*.md</code>.</p>
+            <div class="tags">
+              <span class="tag cat-capstone">capstone</span>
+              <span class="tag">Glob · Read · Write</span>
+              <span class="tag">setting_sources</span>
+              <span class="tag">PreToolUse</span>
+              <span class="tag">disallowed_tools</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-10 <button onclick="copyCmd(this,'make step-10')">copy</button></div>
+          <h5>The whole thing</h5>
+<div class="codeblock">options = ClaudeAgentOptions(
+    model=<span class="str">"claude-sonnet-4-6"</span>,
+    allowed_tools=[<span class="str">"Glob"</span>, <span class="str">"Read"</span>, <span class="str">"Write"</span>],     <span class="cmt"># auto-approve these</span>
+    disallowed_tools=[<span class="str">"Bash"</span>],                  <span class="cmt"># actually remove the shell</span>
+    add_dirs=[str(TRANSCRIPTS_DIR), str(OUTPUT_DIR)],
+    setting_sources=[<span class="str">"project"</span>],                <span class="cmt"># scope skill discovery</span>
+    hooks={<span class="str">"PreToolUse"</span>: [HookMatcher(hooks=[log_tool_calls])]},
+)</div>
+          <h5>What it brings together</h5>
+          <ul>
+            <li><strong>Built-in tools</strong> (step 2b) — <code>Glob</code> + <code>Read</code> + <code>Write</code></li>
+            <li><strong>Skills</strong> (step 4) — <code>meeting-notes-formatter</code> drives the output shape</li>
+            <li><strong>Hooks</strong> (step 8) — <code>PreToolUse</code> logs every call so you can watch it work</li>
+            <li><strong>Tool restriction</strong> — <code>disallowed_tools</code> keeps it off the shell (because <code>allowed_tools</code> doesn't)</li>
+          </ul>
+          <h5>Try this</h5>
+          <p>Drop your own transcript into <code>transcripts/</code> and rerun. Edit <code>.claude/skills/meeting-notes-formatter/SKILL.md</code> to change the output template — no code change needed.</p>
+        </div>
+      </details>
+
+      <details class="step" id="step-11" data-cat="alt">
+        <summary>
+          <div class="stepnum">11<span class="sub">alt sdk</span></div>
+          <div class="summary-body">
+            <div class="ttl">Same ideas, different SDK + local model</div>
+            <p class="desc">PydanticAI with a local Ollama model. The agent ideas are portable; only the glue changes.</p>
+            <div class="tags">
+              <span class="tag cat-alt">alt</span>
+              <span class="tag">pydantic-ai</span>
+              <span class="tag">OpenAIModel</span>
+              <span class="tag">ollama</span>
+            </div>
+          </div>
+          <div class="chevron">▸</div>
+        </summary>
+        <div class="body">
+          <h5>Prerequisites</h5>
+          <ul>
+            <li>Ollama running locally: <code>brew install ollama &amp;&amp; ollama serve</code></li>
+            <li>A tool-capable model: <code>ollama pull llama3.3</code> (or <code>qwen2.5-coder</code>)</li>
+          </ul>
+          <h5>Run it</h5>
+          <div class="run"><span class="prompt">$</span> make step-11 <button onclick="copyCmd(this,'make step-11')">copy</button></div>
+          <h5>The provider setup</h5>
+<div class="codeblock"><span class="kw">import</span> os
+<span class="kw">from</span> pydantic_ai <span class="kw">import</span> Agent
+<span class="kw">from</span> pydantic_ai.models.openai <span class="kw">import</span> OpenAIModel
+<span class="kw">from</span> pydantic_ai.providers.openai <span class="kw">import</span> OpenAIProvider
+
+model = OpenAIModel(
+    model_name=os.environ.get(<span class="str">"OLLAMA_MODEL"</span>, <span class="str">"llama3.3"</span>),
+    provider=OpenAIProvider(base_url=<span class="str">"http://localhost:11434/v1"</span>),
+)
+agent = Agent(model, system_prompt=system_prompt)   <span class="cmt"># skills injected into the prompt</span>
+
+<span class="acc">@agent.tool_plain</span>
+<span class="kw">async def</span> get_weather(city: str) -> str:
+    <span class="str">"""Get the current weather for a city."""</span>
+    ...</div>
+          <h5>What stays the same</h5>
+          <ul>
+            <li>System prompt, tools, and a loop</li>
+            <li>The skill discovery <em>idea</em> — but PydanticAI has no skill primitive, so <code>skills.py</code> rolls a tiny loader that reads <code>.claude/skills/*/SKILL.md</code> and concatenates them into the system prompt</li>
+          </ul>
+          <h5>Honest caveats</h5>
+          <p>Local models are bounded at tool use. Small models (&lt;30B) often hallucinate tool calls or skip them. No Anthropic key needed here. The Claude Agent SDK + Claude remains the production-quality default.</p>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <span class="k">GritAI workshop</span> · Python companion guide · open this in a browser while you code.
+    </div>
+    <div>
+      <a href="./README.md">README</a> &nbsp;·&nbsp;
+      <a href="https://gritai.no">GritAI</a> &nbsp;·&nbsp;
+      <a href="https://docs.claude.com/en/api/agent-sdk/overview">SDK overview</a> &nbsp;·&nbsp;
+      <a href="https://docs.claude.com/en/api/agent-sdk/python">Python reference</a> &nbsp;·&nbsp;
+      <a href="https://modelcontextprotocol.io/">MCP</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // Copy run-commands to clipboard
+  function copyCmd(btn, cmd) {
+    navigator.clipboard.writeText(cmd).then(() => {
+      const original = btn.textContent;
+      btn.textContent = "copied";
+      btn.classList.add("ok");
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove("ok");
+      }, 1200);
+    }).catch(() => {
+      btn.textContent = "err";
+      setTimeout(() => { btn.textContent = "copy"; }, 1200);
+    });
+  }
+
+  // Filter the step grid by category
+  const filterBtns = document.querySelectorAll("#filter-controls .filter");
+  const allSteps = document.querySelectorAll(".step");
+  filterBtns.forEach((b) => {
+    b.addEventListener("click", () => {
+      filterBtns.forEach((x) => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      const cat = b.dataset.filter;
+      allSteps.forEach((step) => {
+        const match = cat === "all" || step.dataset.cat === cat;
+        step.style.display = match ? "" : "none";
+      });
+    });
+  });
+
+  // When an arc dot is clicked, also open that step's <details>
+  document.querySelectorAll(".arc-node").forEach((node) => {
+    node.addEventListener("click", () => {
+      const id = node.getAttribute("href").slice(1);
+      const target = document.getElementById(id);
+      if (target && target.tagName === "DETAILS") {
+        target.open = true;
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

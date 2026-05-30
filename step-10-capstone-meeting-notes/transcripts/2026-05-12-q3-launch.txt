@@ -1,0 +1,19 @@
+Q3 LAUNCH SYNC — 12 May 2026
+Attendees: Anna (eng), Bob (marketing), Chen (security), Dani (PM)
+
+Dani opened by noting the original launch date of June 15 is at risk because the security review hasn't started. Chen confirmed her team is at capacity through end of May.
+
+After some back-and-forth, the group agreed to push the launch to June 30. Anna will own the security review and coordinate with Chen's team to get it scoped by next Monday.
+
+Bob raised a concern about the marketing campaign — emails and the homepage takeover are already booked for the 15th. He doesn't know yet whether the agency can shift the dates without re-billing. He'll come back by EOW with a clear answer.
+
+Action: Bob to draft revised launch comms and circulate by next Friday.
+Action: Anna to share security-review checklist on Monday.
+Action: Dani to update the launch tracker today.
+
+The team also briefly discussed whether the Q4 roadmap should change in light of the delay — Dani said it's premature to decide and parked it for the next planning cycle.
+
+Open: do we owe customers a heads-up before June 15, or is post-fact comms fine? Bob to consult legal.
+Open: is there budget for a second push if the new date slips? Dani to ask the CFO.
+
+Meeting ran 35 minutes.

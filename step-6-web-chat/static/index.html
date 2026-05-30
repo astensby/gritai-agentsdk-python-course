@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workshop Agent</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: #0b0d10;
+        color: #e7eaee;
+        min-height: 100vh;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: 100vh;
+        box-sizing: border-box;
+      }
+      header {
+        border-bottom: 1px solid #1f242a;
+        padding-bottom: 12px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      header p {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: #7d8590;
+      }
+      #turns {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .hint {
+        color: #7d8590;
+        font-size: 14px;
+      }
+      .turn {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #1f242a;
+        white-space: pre-wrap;
+        line-height: 1.5;
+        font-size: 14px;
+      }
+      .turn.user { background: #1a2330; }
+      .turn.agent { background: #11161c; }
+      .turn .role {
+        font-size: 11px;
+        color: #7d8590;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      form {
+        display: flex;
+        gap: 8px;
+        padding-top: 8px;
+      }
+      input[type="text"] {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #0f141a;
+        border: 1px solid #1f242a;
+        color: #e7eaee;
+        font-size: 14px;
+        outline: none;
+      }
+      button {
+        padding: 10px 16px;
+        border-radius: 8px;
+        background: #3b82f6;
+        color: #fff;
+        border: none;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background: #1f242a;
+        cursor: default;
+      }
+      em { font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Workshop Agent</h1>
+        <p>Step 6 — same agent setup as step 5, web UI instead of terminal.</p>
+      </header>
+
+      <div id="turns">
+        <p class="hint" id="hint">
+          Try: <em>"What's the weather in Oslo?"</em> or paste some meeting
+          notes and ask for them to be formatted.
+        </p>
+      </div>
+
+      <form id="form">
+        <input
+          id="input"
+          type="text"
+          placeholder="Type a message…"
+          autocomplete="off"
+        />
+        <button id="send" type="submit" disabled>Send</button>
+      </form>
+    </main>
+
+    <script>
+      // State
+      let sessionId = undefined;
+      let sending = false;
+      const turns = []; // [{role: "user"|"agent", text: string}]
+
+      const $turns = document.getElementById("turns");
+      const $hint = document.getElementById("hint");
+      const $form = document.getElementById("form");
+      const $input = document.getElementById("input");
+      const $send = document.getElementById("send");
+
+      $input.addEventListener("input", () => {
+        $send.disabled = sending || $input.value.trim().length === 0;
+      });
+
+      function render() {
+        // Clear container (keep nothing) and re-render the turns.
+        $turns.innerHTML = "";
+        if (turns.length === 0) {
+          $turns.appendChild($hint);
+          return;
+        }
+        for (const t of turns) {
+          const div = document.createElement("div");
+          div.className = "turn " + t.role;
+          const role = document.createElement("div");
+          role.className = "role";
+          role.textContent = t.role;
+          div.appendChild(role);
+          const body = document.createElement("span");
+          body.textContent = t.text || (t.role === "agent" && sending ? "…" : "");
+          div.appendChild(body);
+          $turns.appendChild(div);
+        }
+      }
+
+      $form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = $input.value.trim();
+        if (!text || sending) return;
+
+        turns.push({ role: "user", text });
+        turns.push({ role: "agent", text: "" });
+        $input.value = "";
+        sending = true;
+        $send.disabled = true;
+        $input.disabled = true;
+        render();
+
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, sessionId }),
+        });
+
+        if (!res.body) {
+          sending = false;
+          $input.disabled = false;
+          $send.disabled = $input.value.trim().length === 0;
+          render();
+          return;
+        }
+
+        // Parse the SSE stream: lines starting with "data: " carry JSON payloads.
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() ?? "";
+
+          for (const part of parts) {
+            const line = part.split("\n").find((l) => l.startsWith("data: "));
+            if (!line) continue;
+            let payload;
+            try {
+              payload = JSON.parse(line.slice(6));
+            } catch {
+              continue;
+            }
+
+            if (payload.type === "session") {
+              sessionId = payload.sessionId;
+            } else if (payload.type === "text") {
+              const last = turns[turns.length - 1];
+              last.text = last.text + payload.text;
+              render();
+            } else if (payload.type === "error") {
+              const last = turns[turns.length - 1];
+              last.text = "⚠️ " + payload.message;
+              render();
+            }
+          }
+        }
+
+        sending = false;
+        $input.disabled = false;
+        $send.disabled = $input.value.trim().length === 0;
+        $input.focus();
+        render();
+      });
+    </script>
+  </body>
+</html>

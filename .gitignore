@@ -1,0 +1,31 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+.DS_Store
+
+# Per-step generated artifacts
+step-*/sandbox/*
+!step-*/sandbox/.gitkeep
+step-10-capstone-meeting-notes/output/*
+!step-10-capstone-meeting-notes/output/.gitkeep
+
+# Web chat (step 6) generated sandbox
+step-6-web-chat/sandbox/*
+!step-6-web-chat/sandbox/.gitkeep
+
+# Internal authoring notes — not part of the participant-facing repo.
+.notes/
+PROGRESS.md
+
+# Note: guide.html IS published — it's the interactive companion the README
+# links to. uv.lock is also intentionally committed (it pins exact versions so
+# every participant gets a reproducible install). Do not add either here.

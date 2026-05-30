@@ -1,0 +1,30 @@
+[project]
+name = "gritai-agentsdk-python-course"
+version = "1.0.0"
+description = "GritAI · Claude Agent SDK Workshop — Python edition, from zero to agent"
+requires-python = ">=3.11"
+# This root project has no runtime deps of its own — it just aggregates the
+# workspace members below. Run `uv sync` once at the root to install every
+# step's deps into a single shared `.venv` (deps hoisted, npm-workspaces-style).
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[tool.uv.workspace]
+members = ["step-*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true

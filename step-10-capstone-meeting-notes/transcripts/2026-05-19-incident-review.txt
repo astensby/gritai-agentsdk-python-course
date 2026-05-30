@@ -1,0 +1,18 @@
+INCIDENT REVIEW — 19 May 2026 (followup on INC-1841)
+Attendees: Anna, Mateo, Priya
+
+Mateo walked through the timeline: at 14:02 UTC the auth service started returning 502s on roughly 8% of requests. Root cause was a deploy that bumped the connection-pool size in a way that exhausted Postgres' max_connections. Took 38 minutes to fully restore.
+
+Decision: we will revert the connection-pool change tonight and put a hard cap of 100 connections per service in the shared client library. Anna to ship the cap by Wednesday.
+
+Decision: every deploy that touches database client config now requires a +1 from the platform team. Priya to update the deploy template by Thursday.
+
+There was disagreement about whether to add a synthetic monitor for the 5xx rate. Anna thinks it's noisy; Priya thinks it would have caught this 20 minutes earlier. They agreed Priya would prototype it and bring data to next week's sync.
+
+Action: Anna — revert + ship connection cap (due: Wed).
+Action: Priya — update deploy template, prototype 5xx synthetic (due: next sync).
+Action: Mateo — write public-facing postmortem by Friday.
+
+Open: do we backfill any customer credits for affected requests? Mateo to ask Sales.
+
+Meeting wrapped at 14:50 UTC, ran 30 minutes.

@@ -1,0 +1,18 @@
+[project]
+name = "step-5-interactive-repl"
+version = "1.0.0"
+description = "GritAI · Agent SDK Workshop step 5 — Interactive REPL (multi-turn chat in the terminal)"
+requires-python = ">=3.11"
+dependencies = [
+    "claude-agent-sdk>=0.2.87",
+    "httpx>=0.27.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# This step doesn't ship as a wheel — single-file demo. Tell hatchling so explicitly
+# so `uv sync` doesn't probe for a `src/` or package layout.
+bypass-selection = true
