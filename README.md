@@ -19,7 +19,7 @@ You start with a **single API call** and finish with a **useful agent** that tur
 | [`step-4-skills`](./step-4-skills) | A Skill the agent invokes autonomously | `.claude/skills/` + `setting_sources` |
 | [`step-5-interactive-repl`](./step-5-interactive-repl) | Multi-turn terminal chat | Session continuity via `resume` |
 | [`step-6-web-chat`](./step-6-web-chat) | The same agent behind a FastAPI UI | Token streaming via `include_partial_messages` over SSE |
-| [`step-7-subagents`](./step-7-subagents) | Delegate to specialist subagents | `agents` option + `Task` tool |
+| [`step-7-subagents`](./step-7-subagents) | Delegate to specialist subagents | `agents` option + `Agent` tool (alias `Task`) |
 | [`step-8-hooks`](./step-8-hooks) | Observe / audit / block tool calls | `PreToolUse` hooks |
 | [`step-9-permissions`](./step-9-permissions) | Interactive "allow this?" prompts | `can_use_tool` callback + `permission_mode` |
 | [`step-10-capstone-meeting-notes`](./step-10-capstone-meeting-notes) | **Capstone** — meeting-notes agent | Composes built-ins + skill + hook into one useful agent |

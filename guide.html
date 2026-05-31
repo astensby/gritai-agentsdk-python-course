@@ -841,7 +841,7 @@ ANTHROPIC_API_KEY=<span class="str">sk-ant-...</span>
           <path d="M22 14 L29 25" stroke="#87867F" stroke-width="1.5"/>
         </svg>
         <h4>Subagents</h4>
-        <p>Decompose a job into specialists with their own prompt and tool whitelist. The main agent dispatches to them with the built-in <code>Task</code> tool.</p>
+        <p>Decompose a job into specialists with their own prompt and tool whitelist. The main agent dispatches to them with the built-in <code>Agent</code> tool (alias <code>Task</code>).</p>
         <div class="ref"><a href="#step-7">step 7</a></div>
       </div>
     </div>
@@ -1231,7 +1231,7 @@ session_id: str | None = None
               <span class="tag cat-control">control</span>
               <span class="tag">agents</span>
               <span class="tag">AgentDefinition</span>
-              <span class="tag">Task tool</span>
+              <span class="tag">Agent tool</span>
             </div>
           </div>
           <div class="chevron">▸</div>
@@ -1244,7 +1244,7 @@ session_id: str | None = None
 
 options = ClaudeAgentOptions(
     model=<span class="str">"claude-sonnet-4-6"</span>,
-    allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Task"</span>],   <span class="cmt"># Task = how the coordinator dispatches</span>
+    allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Agent"</span>, <span class="str">"Task"</span>],   <span class="cmt"># Agent (alias Task) = how the coordinator dispatches</span>
     agents={
         <span class="str">"code-reviewer"</span>: AgentDefinition(
             description=<span class="str">"Reviews code for bugs, security, and code smells."</span>,

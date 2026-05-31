@@ -5,10 +5,12 @@ One MAIN agent (the "coordinator") delegates work to two SUBAGENTS:
   - code-reviewer: spots bugs, security issues, code smells
   - test-planner:  proposes a test plan for the same code
 
-The main agent uses the built-in `Task` tool to spin up each subagent.
-Each subagent runs in its own context with its own system prompt and
-tool whitelist — keeps the main agent's context lean and gives each
-subagent a tight, single-responsibility role.
+The main agent uses the built-in delegation tool to spin up each subagent.
+Recent CLI versions renamed that tool from `Task` to `Agent` (with `Task`
+kept as an alias), so we allow-list both names and match both when we watch
+the coordinator dispatch. Each subagent runs in its own context with its own
+system prompt and tool whitelist — keeps the main agent's context lean and
+gives each subagent a tight, single-responsibility role.
 
 Note on the SDK surface: `ClaudeAgentOptions` uses snake_case
 (allowed_tools, add_dirs, ...), but `AgentDefinition` is the ONE place
@@ -47,11 +49,14 @@ async def main() -> None:
 
     options = ClaudeAgentOptions(
         model="claude-sonnet-4-6",
-        # The main agent gets Read + Task. Task is how it delegates to subagents.
-        allowed_tools=["Read", "Task"],
+        # The main agent gets Read + the delegation tool. `Agent` is the current
+        # name; `Task` is the legacy alias — list both so this works regardless
+        # of the CLI version bundled with the installed SDK.
+        allowed_tools=["Read", "Agent", "Task"],
         add_dirs=[str(sample_dir)],
         # Each entry under `agents` defines a subagent. The key is the name
-        # the main agent uses when calling Task. `AgentDefinition` is a
+        # the main agent passes as `subagent_type` when it delegates.
+        # `AgentDefinition` is a
         # dataclass whose field names are camelCase (`disallowedTools`,
         # `permissionMode`, ...) — the one place the SDK breaks snake_case.
         agents={
@@ -97,8 +102,9 @@ async def main() -> None:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
                 elif isinstance(block, ToolUseBlock):
-                    # Watch the coordinator dispatch Task calls — each one spawns a subagent.
-                    if block.name == "Task":
+                    # Watch the coordinator delegate — each call spawns a subagent.
+                    # Match both the current name (`Agent`) and the legacy alias (`Task`).
+                    if block.name in ("Agent", "Task"):
                         subagent_type = block.input.get("subagent_type")
                         print(f"\n\n[dispatch] subagent: {subagent_type}")
         elif isinstance(message, ResultMessage):
