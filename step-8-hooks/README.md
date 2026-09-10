@@ -41,7 +41,9 @@ options = ClaudeAgentOptions(
 )
 ```
 
-Each hook event (`PreToolUse`, `PostToolUse`, `Stop`, `SessionStart`, ...) takes a list of `HookMatcher` groups. Each group runs its hooks against tool calls that match the `matcher`. Hooks within a group run in order; if any returns a deny, the chain short-circuits.
+Each hook event (`PreToolUse`, `PostToolUse`, `Stop`, ...) takes a list of `HookMatcher` groups. Each group runs its hooks against tool calls that match the `matcher`.
+
+> **On ordering:** the SDK dispatches multiple matcher groups on the *same* event **concurrently**, so don't build a chain where one hook depends on another having already run. The output here happens to arrive tidily — the log line, then the block — but that's incidental rather than guaranteed.
 
 The hook callback signature is:
 
@@ -64,16 +66,20 @@ async def my_hook(input_data, tool_use_id, context):
 
 ## Available hook events
 
-A non-exhaustive subset; see `HOOK_EVENTS` in the SDK types for the full list.
+These ten are the **complete** list — the `HookEvent` union in the SDK types. Worth knowing it's closed, because the Claude Code **CLI** has its own hook events that are *not* available here: register a `SessionStart` or `SessionEnd` hook through the SDK and it silently does nothing.
 
 | Event | When it fires |
 |---|---|
 | `PreToolUse` | Before a tool runs (most common) |
-| `PostToolUse` | After a tool runs successfully |
+| `PostToolUse` | After a tool returns |
+| `PostToolUseFailure` | After a tool throws |
 | `UserPromptSubmit` | When a new user message arrives |
-| `SessionStart` / `SessionEnd` | Session boundaries |
 | `Stop` | The agent thinks it's done (turn end) |
-| `SubagentStart` / `SubagentStop` | Subagent lifecycle |
+| `SubagentStart` | A subagent was spawned (pairs with step 7) |
+| `SubagentStop` | A subagent finished (pairs with step 7) |
+| `PreCompact` | Before context compaction |
+| `Notification` | The agent wants to notify the host |
+| `PermissionRequest` | Around a permission check (pairs with step 9) |
 
 ## Hooks vs `can_use_tool` vs `allowed_tools`
 

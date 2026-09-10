@@ -40,7 +40,7 @@ options = ClaudeAgentOptions(
 )
 ```
 
-In SDK 0.2.87 the default is to load **all** sources (`user`, `project`, `local`), so `.claude/skills/` already loads even if you omit the option. We pass `["project"]` on purpose: workshop runs then depend only on the skill shipped in this folder, not on whatever you happen to have in your personal `~/.claude`. To turn filesystem settings (and skill discovery) **off**, pass `[]` — that's the SDK's isolation mode.
+The SDK default is to load **all** sources (`user`, `project`, `local`), so `.claude/skills/` already loads even if you omit the option. We pass `["project"]` on purpose: workshop runs then depend only on the skill shipped in this folder, not on whatever you happen to have in your personal `~/.claude`. To turn filesystem settings (and skill discovery) **off**, pass `[]` — that's the SDK's isolation mode.
 
 ## Skill anatomy
 

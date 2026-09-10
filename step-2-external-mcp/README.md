@@ -17,11 +17,27 @@ make step-2
 
 Then look in `./sandbox/` — there should be a `haiku.txt` with a freshly-written haiku.
 
+> **Check the location, not just the exit code.** Two things will make this step "pass" while the
+> file lands somewhere else entirely, and neither raises an error:
+>
+> 1. **`allowed_tools` is auto-approve, not a sandbox.** It grants tools; it never removes any. The
+>    built-in `Write`/`Edit`/`Bash` tools always exist, and current models *prefer* them over an MCP
+>    filesystem tool. Allow only the MCP tools and the agent will still reach for the built-in
+>    `Write`, landing the file outside your sandbox. `disallowed_tools` closes that door — comment
+>    it out in `main.py` and re-run to see it happen.
+> 2. **MCP roots override the server's own CLI argument.** The filesystem server asks the client
+>    which directories it may touch and replaces its allowed list with the answer. The Agent SDK
+>    answers with `cwd`. So the sandbox path passed on the command line is only a *fallback* —
+>    setting `cwd` to the sandbox is what makes the two agree.
+>
+> Point 2 generalises: a roots-aware MCP server lets the **client** decide what it may touch. Not
+> every client implements roots — step 11 mounts this same server and logs the opposite.
+
 ## How it works
 
 ```python
-mcp_servers={
-    "fs": {                                                       # ← key becomes tool prefix
+mcp_servers = {
+    "fs": {  # ← key becomes tool prefix
         "type": "stdio",
         "command": "npx",
         "args": ["-y", "@modelcontextprotocol/server-filesystem", str(SANDBOX_DIR)],
@@ -36,10 +52,10 @@ The SDK spawns that command, speaks the **Model Context Protocol** over its stdi
 Without `allowed_tools`, the agent sees no MCP tools — even though they're declared. The SDK denies all MCP tools by default. Pick one:
 
 ```python
-allowed_tools=["mcp__fs__*"]                            # wildcard: easy, broad
+allowed_tools = ["mcp__fs__*"]  # wildcard: easy, broad
 # or
-allowed_tools=[
-    "mcp__fs__write_file",                              # explicit: principle of least privilege
+allowed_tools = [
+    "mcp__fs__write_file",  # explicit: principle of least privilege
     "mcp__fs__read_text_file",
 ]
 ```

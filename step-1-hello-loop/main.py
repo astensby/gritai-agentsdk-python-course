@@ -29,8 +29,13 @@ from claude_agent_sdk import (
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
     )
+
+    # `result` means "a turn ended", not "the run is over" — a stream can
+    # carry several. Accumulate, print once. (Step 7 shows why.)
+    total_cost = 0.0
+    total_ms = 0
 
     async for message in query(
         prompt="Explain what an AI agent is in three sentences.",
@@ -41,9 +46,12 @@ async def main() -> None:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            print("\n\n---")
-            print(f"Cost:     ${message.total_cost_usd:.6f}")
-            print(f"Duration: {message.duration_ms}ms")
+            total_cost += message.total_cost_usd or 0.0
+            total_ms += message.duration_ms or 0
+
+    print("\n\n---")
+    print(f"Cost:     ${total_cost:.6f}")
+    print(f"Duration: {total_ms}ms")
 
 
 if __name__ == "__main__":

@@ -112,8 +112,13 @@ def build_agent_options() -> ClaudeAgentOptions:
     sandbox_dir = project_root / "sandbox"
 
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
-        cwd=str(project_root),
+        model="claude-sonnet-5",
+        # Point `cwd` at the sandbox, not the project root. The MCP roots
+        # handshake answers with `cwd`, and the filesystem server REPLACES its
+        # own CLI argument with whatever it gets back — so a cwd of the project
+        # root would widen the sandbox to the whole step folder. See step 2's
+        # docstring; skill discovery still works, because it walks up from cwd.
+        cwd=str(sandbox_dir),
         # Scope skill discovery to this project (see step 4).
         setting_sources=["project"],
         mcp_servers={
@@ -122,7 +127,8 @@ def build_agent_options() -> ClaudeAgentOptions:
                 "command": "npx",
                 "args": [
                     "-y",
-                    "@modelcontextprotocol/server-filesystem",
+                    # Pinned — see step 2.
+                    "@modelcontextprotocol/server-filesystem@2026.8.31",
                     str(sandbox_dir),
                 ],
             },
@@ -135,11 +141,15 @@ def build_agent_options() -> ClaudeAgentOptions:
             "mcp__fs__list_directory",
             "mcp__weather__getWeather",
         ],
+        # See step 2, point 1 — allowing MCP tools doesn't disallow the
+        # built-ins, and the model prefers the built-ins for file work.
+        disallowed_tools=["Write", "Edit", "NotebookEdit"],
         system_prompt={
             "type": "preset",
             "preset": "claude_code",
             "append": (
-                "You are the workshop web-chat agent. Keep replies short and conversational."
+                "You are the workshop web-chat agent. Keep replies short and conversational. "
+                "Use the mcp__fs__* tools for any file reading or writing."
             ),
         },
     )

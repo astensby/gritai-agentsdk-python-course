@@ -1,9 +1,21 @@
 """
 Step 8 — Hooks
 
-HOOKS let you intercept the agent loop. They fire on events like
-PreToolUse (before a tool runs), PostToolUse (after), Stop (turn done),
-SessionStart, SessionEnd, and many more.
+HOOKS let you intercept the agent loop. The SDK's hook events are exactly
+these ten — no more, and it's worth knowing the list, because the CLI has
+its OWN hook events (SessionStart, SessionEnd, ...) that are NOT available
+here. Registering one of those silently does nothing:
+
+    PreToolUse          before a tool runs      (both demos below)
+    PostToolUse         after a tool returns
+    PostToolUseFailure  after a tool throws
+    UserPromptSubmit    a prompt was submitted
+    Stop                the turn ended
+    SubagentStop        a subagent finished     (pairs with step 7)
+    SubagentStart       a subagent was spawned  (pairs with step 7)
+    PreCompact          before context compaction
+    Notification        the agent wants to notify the host
+    PermissionRequest   around a permission check (pairs with step 9)
 
 Two patterns we'll demo:
 
@@ -17,6 +29,12 @@ the tool input.
 Two registration shapes:
   - HookMatcher(hooks=[fn])              — no matcher: fires on every tool
   - HookMatcher(matcher="Bash", hooks=[fn]) — fires only when the tool name matches
+
+Both fire for a Bash call: the unmatched logger AND the Bash-matched blocker.
+One caveat — the SDK dispatches multiple matchers on the SAME event
+CONCURRENTLY, so don't build a chain where one hook depends on another having
+already run. The output below happens to arrive in a tidy order (the log line,
+then the block), but that's incidental rather than guaranteed.
 
 Note: the hook RETURN VALUE uses camelCase keys (`hookSpecificOutput`,
 `hookEventName`, `permissionDecision`, `permissionDecisionReason`). The SDK
@@ -77,7 +95,7 @@ async def block_dangerous_bash(input_data, tool_use_id, context):
 
 async def main():
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         allowed_tools=["Read", "Write", "Bash"],
         add_dirs=[str(SANDBOX_DIR)],
         # Hooks are grouped by event, then by matcher. The matcher is a
@@ -95,13 +113,19 @@ async def main():
         f"then try to delete it with rm. After that, list the files in {SANDBOX_DIR}."
     )
 
+    # `result` means "a turn ended", not "the run is over" — a stream can
+    # carry several. Accumulate, print once. (Step 7 shows why.)
+    total_cost = 0.0
+
     async for message in query(prompt=prompt, options=options):
         if isinstance(message, AssistantMessage):
             for block in message.content:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            print(f"\n\n---\nCost: ${message.total_cost_usd:.6f}")
+            total_cost += message.total_cost_usd or 0.0
+
+    print(f"\n\n---\nCost: ${total_cost:.6f}")
 
 
 if __name__ == "__main__":

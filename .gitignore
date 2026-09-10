@@ -25,6 +25,10 @@ step-6-web-chat/sandbox/*
 # Internal authoring notes — not part of the participant-facing repo.
 .notes/
 PROGRESS.md
+# The upgrade write-up is a maintainer record: it explains what changed and why,
+# in the voice of someone maintaining the course, not someone taking it. Keep it
+# locally, keep it out of the participants' copy.
+UPGRADE-*.html
 
 # Note: guide.html IS published — it's the interactive companion the README
 # links to. uv.lock is also intentionally committed (it pins exact versions so

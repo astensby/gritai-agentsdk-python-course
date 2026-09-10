@@ -736,7 +736,7 @@
           </div>
           <div>
             <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">No separate CLI install</strong>
-            The Agent SDK is a <a href="https://docs.claude.com/en/api/agent-sdk/overview" style="color: var(--clay); text-decoration: underline;">standalone package</a>: <code>claude-agent-sdk</code> ships a bundled Claude&nbsp;Code binary and uses it automatically — no <code>npm install -g</code>. Node 20+ is needed <em>only</em> for the <code>npx</code> filesystem MCP server in steps 2, 5 and 6.
+            The Agent SDK is a <a href="https://docs.claude.com/en/api/agent-sdk/overview" style="color: var(--clay); text-decoration: underline;">standalone package</a>: <code>claude-agent-sdk</code> ships a bundled Claude&nbsp;Code binary and uses it automatically — no <code>npm install -g</code>. Node 20+ is needed <em>only</em> for the <code>npx</code> filesystem MCP server in steps 2, 5, 6 and 11 — and its version is pinned in the <code>npx</code> args, so everyone runs the same server.
           </div>
         </div>
       </div>
@@ -935,7 +935,7 @@ ANTHROPIC_API_KEY=<span class="str">sk-ant-...</span>
 
 client = AsyncAnthropic()
 response = <span class="kw">await</span> client.messages.create(
-    model=<span class="str">"claude-sonnet-4-6"</span>,
+    model=<span class="str">"claude-sonnet-5"</span>,
     max_tokens=1024,
     messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain what an AI agent is in three sentences."</span>}],
 )</div>
@@ -967,7 +967,7 @@ response = <span class="kw">await</span> client.messages.create(
 <div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> (AssistantMessage, ClaudeAgentOptions,
                               ResultMessage, TextBlock, query)
 
-options = ClaudeAgentOptions(model=<span class="str">"claude-sonnet-4-6"</span>)
+options = ClaudeAgentOptions(model=<span class="str">"claude-sonnet-5"</span>)
 <span class="kw">async for</span> message <span class="kw">in</span> query(prompt=<span class="str">"Explain what an AI agent is."</span>, options=options):
     <span class="kw">if</span> isinstance(message, AssistantMessage):
         <span class="kw">for</span> block <span class="kw">in</span> message.content:
@@ -1037,7 +1037,7 @@ allowed_tools=[
           <div class="run"><span class="prompt">$</span> make step-2b <button onclick="copyCmd(this,'make step-2b')">copy</button></div>
           <h5>The change from step 2</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-4-6"</span>,
+    model=<span class="str">"claude-sonnet-5"</span>,
     allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Write"</span>, <span class="str">"Bash"</span>],  <span class="cmt"># bare names, no mcp__ prefix</span>
     add_dirs=[SANDBOX_DIR],                     <span class="cmt"># grants file-tool access outside cwd</span>
 )</div>
@@ -1139,7 +1139,7 @@ weather_server = create_sdk_mcp_server(name=<span class="str">"weather"</span>, 
           <div class="run"><span class="prompt">$</span> make step-4 <button onclick="copyCmd(this,'make step-4')">copy</button></div>
           <h5>The whole "code" change</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-4-6"</span>,
+    model=<span class="str">"claude-sonnet-5"</span>,
     setting_sources=[<span class="str">"project"</span>],   <span class="cmt"># scope discovery to this folder</span>
 )</div>
           <h5>Read the small print</h5>
@@ -1243,7 +1243,7 @@ session_id: str | None = None
 <div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> AgentDefinition
 
 options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-4-6"</span>,
+    model=<span class="str">"claude-sonnet-5"</span>,
     allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Agent"</span>, <span class="str">"Task"</span>],   <span class="cmt"># Agent (alias Task) = how the coordinator dispatches</span>
     agents={
         <span class="str">"code-reviewer"</span>: AgentDefinition(
@@ -1364,7 +1364,7 @@ options = ClaudeAgentOptions(
           <div class="run"><span class="prompt">$</span> make step-10 <button onclick="copyCmd(this,'make step-10')">copy</button></div>
           <h5>The whole thing</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-4-6"</span>,
+    model=<span class="str">"claude-sonnet-5"</span>,
     allowed_tools=[<span class="str">"Glob"</span>, <span class="str">"Read"</span>, <span class="str">"Write"</span>],     <span class="cmt"># auto-approve these</span>
     disallowed_tools=[<span class="str">"Bash"</span>],                  <span class="cmt"># actually remove the shell</span>
     add_dirs=[str(TRANSCRIPTS_DIR), str(OUTPUT_DIR)],

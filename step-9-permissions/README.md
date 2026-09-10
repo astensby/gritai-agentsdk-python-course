@@ -2,6 +2,11 @@
 
 The "Claude wants to run X — allow?" pattern you've seen in Claude Code itself. Step 8's hooks are programmatic; this is the *interactive* cousin.
 
+> **A plain string prompt is enough.** If you come across older examples that wrap a single prompt
+> in an async generator before calling `query()`, that was a workaround for a time when the SDK
+> only opened the control channel it uses to call `can_use_tool` in streaming-input mode. It keeps
+> stdin open for a string prompt now, so the callback fires either way.
+
 ## What's new
 
 - The `can_use_tool` callback in `ClaudeAgentOptions`

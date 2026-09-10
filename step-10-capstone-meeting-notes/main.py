@@ -54,7 +54,7 @@ async def main() -> None:
 Don't skip any files. Don't add anything that isn't in the source transcripts."""
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         # This job only needs Glob/Read/Write. Note `allowed_tools` AUTO-APPROVES
         # those (so they run without a prompt) — it does NOT remove the others.
         # To actually keep the agent off the shell we add `disallowed_tools`;
@@ -77,16 +77,23 @@ Don't skip any files. Don't add anything that isn't in the source transcripts.""
 
     print("Running capstone agent...\n")
 
+    # `result` means "a turn ended", not "the run is over" — accumulate.
+    total_cost = 0.0
+    total_ms = 0
+
     async for message in query(prompt=prompt, options=options):
         if isinstance(message, AssistantMessage):
             for block in message.content:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            print("\n\n---")
-            print(f"Cost:     ${message.total_cost_usd:.6f}")
-            print(f"Duration: {message.duration_ms}ms")
-            print(f"Output:   {OUTPUT_DIR}")
+            total_cost += message.total_cost_usd or 0.0
+            total_ms += message.duration_ms or 0
+
+    print("\n\n---")
+    print(f"Cost:     ${total_cost:.6f}")
+    print(f"Duration: {total_ms}ms")
+    print(f"Output:   {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

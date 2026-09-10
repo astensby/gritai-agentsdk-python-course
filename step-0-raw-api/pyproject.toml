@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "GritAI · Agent SDK Workshop step 0 — the raw Anthropic API, before the Agent SDK"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.40.0",
+    "anthropic>=1.0,<2",
 ]
 
 [build-system]

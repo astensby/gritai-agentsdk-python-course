@@ -9,12 +9,13 @@ This step is the **contrast lesson**: agent concepts are portable across SDKs. O
 |   | Claude Agent SDK | PydanticAI |
 |---|---|---|
 | Main entry | `query(prompt=..., options=...)` async iterator | `Agent(model, system_prompt=...)` + `await agent.run(...)` |
-| Provider | `claude-agent-sdk` (Claude only) | `pydantic-ai-slim` (multi-provider) — here `OpenAIModel` pointed at Ollama |
+| Provider | `claude-agent-sdk` (Claude only) | `pydantic-ai-slim` (multi-provider) — here `OpenAIChatModel` + `OllamaProvider` |
 | Loop control | Built-in, auto-iterates | Built-in, auto-iterates (similar shape) |
-| MCP integration | Native `mcp_servers` option | PydanticAI has MCP support — we skip it here for focus |
+| MCP integration | Native `mcp_servers` option | `MCPToolset` + `FastMCPClient` — same filesystem server as step 2 |
+| MCP **roots** | Advertises roots, so the server's CLI sandbox arg is overridden | Does **not** advertise roots by default, so the server keeps its CLI arg |
 | Custom tools | `@tool(...)` + `create_sdk_mcp_server(...)` | `@agent.tool_plain` decorator on a Python function |
 | Skills | Auto-discovered from `.claude/skills/` via `setting_sources` | **Not built-in** — `skills.py` loads them manually |
-| Model | Claude (`claude-sonnet-4-6`) | Any Ollama model (`llama3.3`, `qwen2.5-coder`, ...) |
+| Model | Claude (`claude-sonnet-5`) | Any Ollama model (`llama3.3`, `qwen2.5-coder`, ...) |
 
 ## Prerequisites
 
@@ -52,7 +53,19 @@ The agent will:
 3. Receive raw meeting notes and a prompt to format them
 4. Loop: call model → see tool request → run tool → repeat — driven by PydanticAI's `Agent.run`
 
-The custom `get_weather` tool is included as the "look, custom tools work the same way" beat. Whether the model also writes to `sandbox/formatted.md` depends on whether you add a file-write tool / MCP server (see "Try this" below).
+The custom `get_weather` tool is included as the "look, custom tools work the same way" beat. The filesystem MCP server is what gives the agent a way to write `sandbox/formatted.md` at all — a prompt that asks for a file is only as good as the tools the agent has to create one.
+
+### The MCP roots counterpoint
+
+Watch the server's startup line in this step:
+
+```
+Client does not support MCP Roots, using allowed directories set from server args
+```
+
+Step 2 mounts the **same server** and gets the opposite behaviour: the Claude Agent SDK advertises MCP roots, so the server discards its own CLI sandbox argument and uses whatever the client reports as its `cwd`. PydanticAI's client leaves `roots` unset, so the CLI argument stands.
+
+Same server, two clients, two different sandboxes — a concrete demonstration that "supports MCP" is not a single capability but a pile of optional sub-protocols.
 
 ## How the skill system works here
 
@@ -110,5 +123,5 @@ For a workshop, the Claude Agent SDK is the right teaching default — it lets t
 
 - Swap `qwen2.5-coder:14b` and observe whether the model uses the skill correctly. Then try a 7B model and watch it drift.
 - Add a second skill (`code-explainer`?) and prompt for code review. Notice the model has to choose between two skills based only on description matching.
-- Replace `OpenAIModel(... base_url=ollama)` with `AnthropicModel("claude-sonnet-4-6")` and rerun. Same code, much better results — that's the model quality gap.
-- Add MCP: PydanticAI ships an `MCPServerStdio` you can pass to `Agent(mcp_servers=[...])`. Wire up `@modelcontextprotocol/server-filesystem` against `./sandbox` and the agent will be able to actually save `formatted.md` (today the demo only loads the skill + custom tool path).
+- Replace `OpenAIChatModel(..., provider=OllamaProvider(...))` with `AnthropicModel("claude-sonnet-5")` and rerun. Same code, much better results — that's the model quality gap.
+- Advertise MCP roots: pass `roots=[str(SANDBOX_DIR)]` to `FastMCPClient(...)` and re-run. The server's startup line changes, because the client is now the one deciding what it may touch. That single argument is the whole difference between this step and step 2.

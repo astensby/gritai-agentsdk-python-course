@@ -2,6 +2,23 @@
 
 A main agent that delegates specialist work to **subagents**. This is the single most-asked-about Agent SDK pattern and the canonical "putting it all together in Agents" idea from Day 2.
 
+> **Subagents run in the background by default.** The delegation tool takes a `run_in_background`
+> parameter that defaults to **true**. Leave it alone and the coordinator dispatches both
+> specialists, announces they're running in the background, and *ends its turn* — so the stream
+> emits a `result` (with a cost) before either subagent has reported. That run produces 116 lines
+> of output and **three** cost lines, with both subagent transcripts interleaved over the summary.
+>
+> `main.py` handles it three ways, and all three are worth understanding:
+>
+> 1. The prompt asks for `run_in_background: false`.
+> 2. The message loop skips anything carrying `parent_tool_use_id` — that's how you tell a
+>    subagent's chatter from the coordinator's.
+> 3. Cost is accumulated and printed **after** the stream, because `result` means "a turn ended",
+>    not "the run is over".
+>
+> **Try it:** delete the `run_in_background: false` sentence from the prompt and re-run. Comparing
+> the two traces teaches background delegation and stream handling at the same time.
+
 ## What's new
 
 - The `agents` option in `ClaudeAgentOptions`
@@ -23,13 +40,17 @@ Watch the trace — you'll see the main agent dispatch two `Agent` calls (one pe
 from claude_agent_sdk import AgentDefinition
 
 options = ClaudeAgentOptions(
-    allowed_tools=["Read", "Agent", "Task"], # ← main agent needs the delegation tool (Agent/Task) to dispatch
+    allowed_tools=[
+        "Read",
+        "Agent",
+        "Task",
+    ],  # ← main agent needs the delegation tool (Agent/Task) to dispatch
     add_dirs=[str(sample_dir)],
     agents={
         "code-reviewer": AgentDefinition(
-            description="...",               # ← main agent uses this to decide WHEN to dispatch
-            prompt="...",                    # ← the subagent's system prompt
-            tools=["Read", "Grep"],          # ← the subagent's own allowed tools
+            description="...",  # ← main agent uses this to decide WHEN to dispatch
+            prompt="...",  # ← the subagent's system prompt
+            tools=["Read", "Grep"],  # ← the subagent's own allowed tools
         ),
         "test-planner": AgentDefinition(...),
     },

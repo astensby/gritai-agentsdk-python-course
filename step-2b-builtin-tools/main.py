@@ -33,7 +33,7 @@ async def main() -> None:
     )
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         # Just whitelist the built-in tools by their bare names. No MCP at all.
         # (Tools without `mcp__` prefix are built-ins.)
         allowed_tools=["Read", "Write", "Bash"],
@@ -41,6 +41,10 @@ async def main() -> None:
         # Without this, the agent can only touch CWD and below.
         add_dirs=[SANDBOX_DIR],
     )
+
+    # `result` means "a turn ended", not "the run is over" — a stream can
+    # carry several. Accumulate, print once. (Step 7 shows why.)
+    total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
         if isinstance(message, AssistantMessage):
@@ -51,8 +55,10 @@ async def main() -> None:
                     summary = str(block.input)[:100]
                     print(f"\n[tool call] {block.name}({summary})")
         elif isinstance(message, ResultMessage):
-            print(f"\n\n---\nCost: ${message.total_cost_usd:.6f}")
-            print("Check ./sandbox/limerick.txt")
+            total_cost += message.total_cost_usd or 0.0
+
+    print(f"\n\n---\nCost: ${total_cost:.6f}")
+    print(f"Check {SANDBOX_DIR}/limerick.txt")
 
 
 if __name__ == "__main__":

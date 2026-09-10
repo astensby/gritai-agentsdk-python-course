@@ -101,7 +101,15 @@ def build_agent_options() -> ClaudeAgentOptions:
     sandbox_dir = (Path(__file__).parent / "sandbox").resolve()
 
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
+        # The MCP roots handshake answers with `cwd`, so point it at the sandbox
+        # or the filesystem server's own CLI argument gets overridden and the
+        # agent gets the whole project. Full explanation in step 2's docstring.
+        #
+        # This does NOT break skill discovery: `setting_sources=["project"]`
+        # resolves by walking UP from cwd, so `.claude/skills/` one level above
+        # is still found.
+        cwd=str(sandbox_dir),
         # Scope skill discovery to this project (see step 4).
         setting_sources=["project"],
         # External MCP (from step 2) + in-process MCP (from step 3).
@@ -111,7 +119,9 @@ def build_agent_options() -> ClaudeAgentOptions:
                 "command": "npx",
                 "args": [
                     "-y",
-                    "@modelcontextprotocol/server-filesystem",
+                    # Pinned: `npx -y` with no version fetches latest at run
+                    # time. See step 2.
+                    "@modelcontextprotocol/server-filesystem@2026.8.31",
                     str(sandbox_dir),
                 ],
             },
@@ -124,12 +134,18 @@ def build_agent_options() -> ClaudeAgentOptions:
             "mcp__fs__list_directory",
             "mcp__weather__getWeather",
         ],
+        # Without this the model reaches for the built-in Write/Edit for file
+        # work and never touches the MCP server. In a chat this surfaces on turn
+        # two as "I need permission to write that file" — or worse, a successful
+        # write somewhere you didn't intend. See step 2, point 1.
+        disallowed_tools=["Write", "Edit", "NotebookEdit"],
         system_prompt={
             "type": "preset",
             "preset": "claude_code",
             "append": (
                 "You are the workshop demo agent. Keep replies short and "
-                "conversational unless asked otherwise."
+                "conversational unless asked otherwise. "
+                "Use the mcp__fs__* tools for any file reading or writing."
             ),
         },
     )

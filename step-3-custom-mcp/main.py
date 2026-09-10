@@ -28,7 +28,7 @@ from weather_server import weather_server
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         # Mount our in-process MCP server. The key ("weather") becomes the
         # tool-name prefix the model sees.
         mcp_servers={"weather": weather_server},
@@ -43,6 +43,10 @@ async def main() -> None:
         "What's the weather in Oslo right now? Also give me a 3-day forecast for San Francisco."
     )
 
+    # `result` means "a turn ended", not "the run is over" — a stream can
+    # carry several. Accumulate, print once. (Step 7 shows why.)
+    total_cost = 0.0
+
     async for message in query(prompt=prompt, options=options):
         if isinstance(message, AssistantMessage):
             for block in message.content:
@@ -51,7 +55,9 @@ async def main() -> None:
                 elif isinstance(block, ToolUseBlock):
                     print(f"\n[tool call] {block.name}({block.input})")
         elif isinstance(message, ResultMessage):
-            print(f"\n\n---\nCost: ${message.total_cost_usd:.6f}")
+            total_cost += message.total_cost_usd or 0.0
+
+    print(f"\n\n---\nCost: ${total_cost:.6f}")
 
 
 if __name__ == "__main__":

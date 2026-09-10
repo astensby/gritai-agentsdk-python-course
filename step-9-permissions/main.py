@@ -75,7 +75,7 @@ async def can_use_tool(tool_name, tool_input, context):
 
 async def main():
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         # NOTE: we deliberately leave allowed_tools empty so EVERY tool call
         # routes through can_use_tool. In a real app you'd allowed_tools the
         # cheap/safe tools (Read, Glob, Grep) and only prompt for the risky
@@ -86,18 +86,27 @@ async def main():
         permission_mode="default",
     )
 
-    prompt = (
+    prompt_text = (
         f"Create a file called pizza.txt in {SANDBOX_DIR} with a short pizza "
         f"recipe. Then read it back, then run 'ls' on the sandbox folder."
     )
 
-    async for message in query(prompt=prompt, options=options):
+    # A plain string prompt is all you need. If you find older examples that
+    # wrap a single prompt in an async generator, that was a workaround for a
+    # time when the SDK only opened the control channel it uses to call
+    # `can_use_tool` in streaming-input mode. It keeps stdin open for a string
+    # prompt now, so the callback fires either way.
+    total_cost = 0.0
+
+    async for message in query(prompt=prompt_text, options=options):
         if isinstance(message, AssistantMessage):
             for block in message.content:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            print(f"\n\n---\nCost: ${message.total_cost_usd:.6f}")
+            total_cost += message.total_cost_usd or 0.0
+
+    print(f"\n\n---\nCost: ${total_cost:.6f}")
 
 
 if __name__ == "__main__":

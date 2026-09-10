@@ -16,14 +16,14 @@ You start with a **single API call** and finish with a **useful agent** that tur
 | [`step-2b-builtin-tools`](./step-2b-builtin-tools) | The SDK's built-in `Read`/`Write`/`Bash`/... | MCP isn't needed for everything |
 | [`step-3-custom-mcp`](./step-3-custom-mcp) | Your own Python functions as MCP tools (canned data) | `create_sdk_mcp_server` + `@tool` |
 | [`step-3b-real-weather`](./step-3b-real-weather) | The same tool, now calling a real API | `httpx` → Open-Meteo (no key) |
-| [`step-4-skills`](./step-4-skills) | A Skill the agent invokes autonomously | `.claude/skills/` + `setting_sources` |
+| [`step-4-skills`](./step-4-skills) | A Skill the agent invokes autonomously | `.claude/skills/` + `setting_sources` (and the `skills` option) |
 | [`step-5-interactive-repl`](./step-5-interactive-repl) | Multi-turn terminal chat | Session continuity via `resume` |
 | [`step-6-web-chat`](./step-6-web-chat) | The same agent behind a FastAPI UI | Token streaming via `include_partial_messages` over SSE |
 | [`step-7-subagents`](./step-7-subagents) | Delegate to specialist subagents | `agents` option + `Agent` tool (alias `Task`) |
 | [`step-8-hooks`](./step-8-hooks) | Observe / audit / block tool calls | `PreToolUse` hooks |
 | [`step-9-permissions`](./step-9-permissions) | Interactive "allow this?" prompts | `can_use_tool` callback + `permission_mode` |
 | [`step-10-capstone-meeting-notes`](./step-10-capstone-meeting-notes) | **Capstone** — meeting-notes agent | Composes built-ins + skill + hook into one useful agent |
-| [`step-11-pydanticai-ollama`](./step-11-pydanticai-ollama) | Same patterns, **different SDK + local model** | PydanticAI + Ollama + manual skill loader |
+| [`step-11-pydanticai-ollama`](./step-11-pydanticai-ollama) | Same patterns, **different SDK + local model** | PydanticAI + Ollama + MCP roots counterpoint |
 
 ## Setup (once)
 
@@ -59,10 +59,10 @@ make step-5-streaming        # step 5's advanced streaming-input variant
 - **Python 3.11+** (the workspace pins `requires-python = ">=3.11"`)
 - **[uv](https://docs.astral.sh/uv/)** — `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **An Anthropic API key** — get one at [console.anthropic.com](https://console.anthropic.com/)
-- **Node.js 20+** — *only* for the steps that spawn `npx @modelcontextprotocol/server-filesystem` as an external MCP server (step 2 / step 5 / step 6). The Agent SDK itself does **not** need it.
+- **Node.js 20+** — *only* for the steps that spawn `npx @modelcontextprotocol/server-filesystem@2026.8.31` as an external MCP server (steps 2, 5, 6 and 11). The Agent SDK itself does **not** need it. The server version is **pinned in the `npx` args**: `npx -y <pkg>` with no version fetches whatever is newest at run time, so without a pin two people running the same step on different days can get different servers.
 - *(For step 11)* — a running [Ollama](https://ollama.ai) server with a tool-capable model pulled
 
-> **No separate Claude Code CLI install needed.** The Agent SDK is a [standalone package](https://docs.claude.com/en/api/agent-sdk/overview) — `claude-agent-sdk` ships the Claude Code CLI it runs under the hood (a native binary, bundled in the wheel), so you do **not** need to `npm install -g @anthropic-ai/claude-code`. The SDK finds and uses the bundled binary automatically. If it can't be located on your platform, see gotcha 6.
+> **No separate Claude Code CLI install needed.** The Agent SDK is a [standalone package](https://docs.claude.com/en/api/agent-sdk/overview) — `claude-agent-sdk` ships the Claude Code CLI it runs under the hood (a native binary, bundled in the wheel), so you do **not** need to `npm install -g @anthropic-ai/claude-code`. The SDK finds and uses the bundled binary automatically. If it can't be located on your platform, see gotcha 9.
 
 ## How the env works
 
@@ -81,11 +81,14 @@ A suggested order through the steps, grouped by what each phase builds. Skip aro
 ## Common gotchas
 
 1. **`ANTHROPIC_API_KEY` not set** — make sure you copied `.env.example` to `.env` (at the **root**, not inside a step folder) and pasted your key. Confirm with `uv run --env-file=.env python -c "import os; print(bool(os.getenv('ANTHROPIC_API_KEY')))"`.
-2. **A Skill isn't loading** — Skills are discovered from your setting sources. The SDK default loads all of them (`user` + `project` + `local`), so a project's `.claude/skills/` is picked up automatically. If you've passed `setting_sources=[]` (isolation mode) you've turned discovery off — include `"project"`. See [step-4](./step-4-skills).
-3. **An MCP tool doesn't fire** — list it (or a wildcard) in `allowed_tools`. Tools are named `mcp__<server-name>__<tool-name>`. Built-in tools use bare names (`Read`, `Write`, ...).
-4. **Python too old / `uv` missing** — the workspace requires Python 3.11+ and uv 0.5+. Check with `python3 --version` and `uv --version`.
-5. **`ModuleNotFoundError: No module named 'claude_agent_sdk'`** — you ran `uv sync` instead of `uv sync --all-packages`. The root project has no deps of its own; you need the `--all-packages` flag to install the workspace members.
-6. **`Error: command not found: claude` (or `CLINotFoundError`)** — `claude-agent-sdk` ships a bundled Claude Code CLI and uses it automatically, so this should be rare. If the bundled binary can't be found on your platform, install the CLI globally with `npm install -g @anthropic-ai/claude-code`, or point the SDK at one with `ClaudeAgentOptions(cli_path=...)`.
+2. **A Skill isn't loading** — Skills are discovered from your setting sources. The SDK default loads all of them (`user` + `project` + `local`), so a project's `.claude/skills/` is picked up automatically. If you've passed `setting_sources=[]` (isolation mode) you've turned discovery off — include `"project"`. Or skip discovery entirely and name them: `skills=["meeting-notes-formatter"]`. See [step-4](./step-4-skills).
+3. **An MCP tool doesn't fire** — list it (or a wildcard) in `allowed_tools`. Tools are named `mcp__<server-name>__<tool-name>`. Built-in tools use bare names (`Read`, `Write`, ...). You may also see an extra `ToolSearch` call before it: MCP tool schemas are deferred rather than all pasted into the prompt, so the model looks them up by name first.
+4. **The agent used a built-in tool instead of your MCP server** — `allowed_tools` is **auto-approve, not a sandbox**. It grants tools; it never removes any. The built-in `Write`/`Edit`/`Bash` always exist, and current models prefer them for file work. Add `disallowed_tools=["Write", "Edit", "Bash"]` to force the MCP route. See [step-2](./step-2-external-mcp).
+5. **A file landed somewhere unexpected** — the filesystem MCP server implements the MCP **roots** protocol: it asks the client which directories it may touch and replaces its own CLI argument with the answer. The Agent SDK answers with `cwd`, so set `cwd` to your sandbox or the sandbox silently widens to the whole project. See [step-2](./step-2-external-mcp); [step-11](./step-11-pydanticai-ollama) mounts the same server with a client that *doesn't* advertise roots.
+6. **Cost printed two or three times, or output cut short** — a stream can contain **several** `result` messages. `result` means "a turn ended", not "the run is over": background subagents and multi-turn work each produce one. Accumulate and print after the loop instead of `if result: print(cost); break`. See [step-7](./step-7-subagents).
+7. **Python too old / `uv` missing** — the workspace requires Python 3.11+ and uv 0.5+. Check with `python3 --version` and `uv --version`.
+8. **`ModuleNotFoundError: No module named 'claude_agent_sdk'`** — you ran `uv sync` instead of `uv sync --all-packages`. The root project has no deps of its own; you need the `--all-packages` flag to install the workspace members.
+9. **`Error: command not found: claude` (or `CLINotFoundError`)** — `claude-agent-sdk` ships a bundled Claude Code CLI and uses it automatically, so this should be rare. If the bundled binary can't be found on your platform, install the CLI globally with `npm install -g @anthropic-ai/claude-code`, or point the SDK at one with `ClaudeAgentOptions(cli_path=...)`.
 
 ## "Can I just run one step in isolation?"
 
