@@ -17,6 +17,11 @@ from collections.abc import AsyncGenerator
 from agent import build_agent_options
 from claude_agent_sdk import AssistantMessage, ResultMessage, TextBlock, query
 
+# The SDK asks this generator for the next message as soon as it has taken the
+# current one, which is long before the reply exists. Without this event the next
+# "you > " prompt prints straight over the agent's answer.
+turn_done = asyncio.Event()
+
 
 async def prompt(label: str) -> str:
     return (await asyncio.to_thread(input, label)).strip()
@@ -34,6 +39,8 @@ async def user_inputs() -> AsyncGenerator[dict, None]:
             "message": {"role": "user", "content": user_input},
             "parent_tool_use_id": None,
         }
+        await turn_done.wait()
+        turn_done.clear()
 
 
 async def main() -> None:
@@ -48,6 +55,7 @@ async def main() -> None:
             # the two is that we keep ONE query() alive across all turns here,
             # whereas the resume variant calls query() once per turn.
             print("\n")
+            turn_done.set()
 
 
 if __name__ == "__main__":

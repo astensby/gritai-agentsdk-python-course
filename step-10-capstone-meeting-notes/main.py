@@ -54,7 +54,7 @@ async def main() -> None:
 Don't skip any files. Don't add anything that isn't in the source transcripts."""
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
         # This job only needs Glob/Read/Write. Note `allowed_tools` AUTO-APPROVES
         # those (so they run without a prompt) — it does NOT remove the others.
         # To actually keep the agent off the shell we add `disallowed_tools`;
@@ -62,6 +62,9 @@ Don't skip any files. Don't add anything that isn't in the source transcripts.""
         allowed_tools=["Glob", "Read", "Write"],
         disallowed_tools=["Bash"],
         add_dirs=[str(TRANSCRIPTS_DIR), str(OUTPUT_DIR)],
+        # Skills are found under `cwd` and its parents, and `make` runs from the
+        # repo root, so point it at this step or the skill isn't discovered.
+        cwd=str(PROJECT_DIR),
         # Scope skill discovery to this project's .claude/ folder so the run is
         # reproducible — independent of whatever you have in ~/.claude. (The SDK
         # default already loads project skills; setting it explicitly just
@@ -77,7 +80,9 @@ Don't skip any files. Don't add anything that isn't in the source transcripts.""
 
     print("Running capstone agent...\n")
 
-    # `result` means "a turn ended", not "the run is over" — accumulate.
+    # `result` means "a turn ended", not "the run is over". `total_cost_usd` is
+    # the running total for the call, so keep the latest; `duration_ms` is per
+    # turn, so add those up.
     total_cost = 0.0
     total_ms = 0
 
@@ -87,7 +92,7 @@ Don't skip any files. Don't add anything that isn't in the source transcripts.""
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
             total_ms += message.duration_ms or 0
 
     print("\n\n---")

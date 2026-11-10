@@ -14,7 +14,7 @@ async def main() -> None:
     client = AsyncAnthropic()
 
     response = await client.messages.create(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
         # Thinking is adaptive on current models, and thinking tokens count
         # against max_tokens — so the ceiling has to cover the model's reasoning
         # as well as its answer, and a three-sentence reply can spend a few
@@ -22,7 +22,7 @@ async def main() -> None:
         # printed below: "max_tokens" means you were cut off mid-thought and
         # should raise this number.
         max_tokens=4096,
-        # `effort` is the cheapest cost lever you have: low/medium/high/xhigh
+        # `effort` is the cheapest cost lever you have: low/medium/high/xhigh/max
         # trades thinking depth against token spend, with no change to your
         # prompt. Worth knowing from the very first request. Note it lives
         # inside output_config, not at the top level.

@@ -26,8 +26,10 @@ instead of the ~18 lines you get below.
 Two consequences to handle, and they generalise well beyond step 7:
 
   1. `result` means "A TURN ENDED", not "the run is over". Any loop shaped
-     like `if result: print(cost); break` will truncate or double-report.
-     Accumulate cost across results and print once, after the stream.
+     like `if result: print(cost); break` will truncate the run. And
+     `total_cost_usd` on each result is the RUNNING TOTAL for the whole call,
+     so summing them overcounts: results of $0.045, $0.045 and $0.053 cost
+     $0.053, not $0.143. Keep the latest and print once, after the stream.
 
   2. Subagent chatter and coordinator output arrive in the SAME stream. You
      tell them apart with `message.parent_tool_use_id` — it's set on
@@ -76,7 +78,9 @@ async def main() -> None:
     )
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Ignore ~/.claude so this run depends only on this file. See step 1.
+        setting_sources=[],
         # The main agent gets Read + the delegation tool. `Agent` is the current
         # name; `Task` is the legacy alias — list both so this works regardless
         # of the CLI version bundled with the installed SDK.
@@ -124,8 +128,8 @@ async def main() -> None:
         },
     )
 
-    # A stream can contain SEVERAL result messages, so accumulate rather than
-    # printing on each one. See the module docstring.
+    # A stream can contain SEVERAL result messages, and each carries the running
+    # total, so keep the latest and print after the stream. See the docstring.
     total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
@@ -147,7 +151,7 @@ async def main() -> None:
                         subagent_type = block.input.get("subagent_type")
                         print(f"\n\n[dispatch] subagent: {subagent_type}")
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
 

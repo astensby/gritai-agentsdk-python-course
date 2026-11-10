@@ -5,7 +5,7 @@ Plug an existing MCP server into the agent. The agent gains real-world tools.
 ## What's new vs step 1
 
 - `mcp_servers` option on `ClaudeAgentOptions` — declares MCP servers the agent can use
-- `allowed_tools` option — the **mandatory whitelist** for MCP tools
+- `allowed_tools` option — the **auto-approve list** MCP tools need in a headless run
 - The agent now runs a tool loop autonomously (call tool → observe → decide → respond)
 
 ## Run it
@@ -31,7 +31,9 @@ Then look in `./sandbox/` — there should be a `haiku.txt` with a freshly-writt
 >    setting `cwd` to the sandbox is what makes the two agree.
 >
 > Point 2 generalises: a roots-aware MCP server lets the **client** decide what it may touch. Not
-> every client implements roots — step 11 mounts this same server and logs the opposite.
+> every client implements roots — step 11 mounts this same server and logs the opposite. Roots is
+> also being phased out (deprecated in the 2026-07-28 MCP spec, and newer releases of this server
+> no longer log it), so this version is pinned on purpose.
 
 ## How it works
 
@@ -40,7 +42,7 @@ mcp_servers = {
     "fs": {  # ← key becomes tool prefix
         "type": "stdio",
         "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", str(SANDBOX_DIR)],
+        "args": ["-y", "@modelcontextprotocol/server-filesystem@2026.8.31", str(SANDBOX_DIR)],
     },
 }
 ```
@@ -49,7 +51,7 @@ The SDK spawns that command, speaks the **Model Context Protocol** over its stdi
 
 ## The whitelist gotcha
 
-Without `allowed_tools`, the agent sees no MCP tools — even though they're declared. The SDK denies all MCP tools by default. Pick one:
+Without `allowed_tools`, the agent can see your MCP tools but every call comes back denied: they aren't pre-approved, and a headless run has nobody to approve them. (That holds because this step sets `setting_sources=[]`. In your real Claude Code settings, a `permissions.defaultMode` of `auto` would let the call through.) Pick one:
 
 ```python
 allowed_tools = ["mcp__fs__*"]  # wildcard: easy, broad
@@ -60,7 +62,7 @@ allowed_tools = [
 ]
 ```
 
-The MCP server itself decides what tools it offers; `allowed_tools` is just the agent-side permission gate.
+The MCP server itself decides what tools it offers; `allowed_tools` is just the agent-side permission gate. A wildcard reaches only the named server: `mcp__fs__*` says nothing about any other server you mount.
 
 The code in this step uses the **explicit form** to model principle-of-least-privilege. For quick prototyping, the wildcard is fine.
 

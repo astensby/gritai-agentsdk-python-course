@@ -58,6 +58,7 @@ The format comes from `.claude/skills/meeting-notes-formatter/SKILL.md` — chan
 - `allowed_tools=["Glob", "Read", "Write"]` — auto-approves those three so the agent doesn't prompt
 - `disallowed_tools=["Bash"]` — actually removes the shell so the agent can't go off-script
 - `add_dirs=[transcripts_dir, output_dir]` — built-in file tools refuse paths outside CWD unless added
+- `cwd=str(PROJECT_DIR)` — skills are found under `cwd` and its parents; `make` runs from the repo root, so this is what makes the skill discoverable
 - `setting_sources=["project"]` — narrows skill discovery to this folder
 - `hooks={"PreToolUse": [HookMatcher(hooks=[log_tool_calls])]}` — observability with one async function
 

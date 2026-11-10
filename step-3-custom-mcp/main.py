@@ -28,7 +28,9 @@ from weather_server import weather_server
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Ignore ~/.claude so this run depends only on this file. See step 1.
+        setting_sources=[],
         # Mount our in-process MCP server. The key ("weather") becomes the
         # tool-name prefix the model sees.
         mcp_servers={"weather": weather_server},
@@ -44,7 +46,8 @@ async def main() -> None:
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can
-    # carry several. Accumulate, print once. (Step 7 shows why.)
+    # carry several, and `total_cost_usd` on each one is the running total for
+    # the whole call. Keep the latest, print once. (Step 7 shows why.)
     total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
@@ -55,7 +58,7 @@ async def main() -> None:
                 elif isinstance(block, ToolUseBlock):
                     print(f"\n[tool call] {block.name}({block.input})")
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
 

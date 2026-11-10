@@ -29,11 +29,17 @@ from claude_agent_sdk import (
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Don't inherit this machine's ~/.claude settings. Left unset, your own
+        # `permissions.defaultMode`, allow rules, hooks and plugins all apply,
+        # so the same program can run tools it should not, and cost more.
+        setting_sources=[],
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can
-    # carry several. Accumulate, print once. (Step 7 shows why.)
+    # carry several, and `total_cost_usd` on each one is the running total for
+    # the whole call, so keep the latest; `duration_ms` is per turn, so add
+    # those up. (Step 7 shows why.)
     total_cost = 0.0
     total_ms = 0
 
@@ -46,7 +52,7 @@ async def main() -> None:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
             total_ms += message.duration_ms or 0
 
     print("\n\n---")

@@ -36,6 +36,12 @@ CONCURRENTLY, so don't build a chain where one hook depends on another having
 already run. The output below happens to arrive in a tidy order (the log line,
 then the block), but that's incidental rather than guaranteed.
 
+*** HOOKS FAIL OPEN BY DEFAULT. *** If a hook callback raises, or returns
+None, Claude Code logs the failure and the tool RUNS ANYWAY. A broken safety
+check is the same as no safety check, so the Bash matcher below sets
+`on_failure="block"`: if the callback fails, the tool call is blocked instead.
+Set it on every hook whose job is safety. (Needs SDK 0.2.177 or later.)
+
 Note: the hook RETURN VALUE uses camelCase keys (`hookSpecificOutput`,
 `hookEventName`, `permissionDecision`, `permissionDecisionReason`). The SDK
 forwards this payload to the agent process verbatim — same wire format as
@@ -95,7 +101,9 @@ async def block_dangerous_bash(input_data, tool_use_id, context):
 
 async def main():
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Ignore ~/.claude so this run depends only on this file. See step 1.
+        setting_sources=[],
         allowed_tools=["Read", "Write", "Bash"],
         add_dirs=[str(SANDBOX_DIR)],
         # Hooks are grouped by event, then by matcher. The matcher is a
@@ -103,7 +111,8 @@ async def main():
         hooks={
             "PreToolUse": [
                 HookMatcher(hooks=[log_tool_calls]),  # fires for every tool
-                HookMatcher(matcher="Bash", hooks=[block_dangerous_bash]),  # only for Bash
+                # Only for Bash. If this safety check crashes, block the call.
+                HookMatcher(matcher="Bash", hooks=[block_dangerous_bash], on_failure="block"),
             ],
         },
     )
@@ -114,7 +123,8 @@ async def main():
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can
-    # carry several. Accumulate, print once. (Step 7 shows why.)
+    # carry several, and `total_cost_usd` on each one is the running total for
+    # the whole call. Keep the latest, print once. (Step 7 shows why.)
     total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
@@ -123,7 +133,7 @@ async def main():
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
 

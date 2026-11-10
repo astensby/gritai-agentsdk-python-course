@@ -1,6 +1,6 @@
 # GritAI · Claude Agent SDK Workshop — Python edition
 
-A hands-on, progressive workshop for the [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview) in Python, by [GritAI](https://gritai.no). Fourteen runnable step folders, one root install, one `.env` file. Drop in at any step.
+A hands-on, progressive workshop for the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) in Python, by [GritAI](https://gritai.studio). Fourteen runnable step folders, one root install, one `.env` file. Drop in at any step.
 
 > **Interactive companion:** open [`guide.html`](./guide.html) in a browser for a visual walk-through of the whole arc, with expandable step cards and copyable run commands.
 
@@ -58,11 +58,11 @@ make step-5-streaming        # step 5's advanced streaming-input variant
 
 - **Python 3.11+** (the workspace pins `requires-python = ">=3.11"`)
 - **[uv](https://docs.astral.sh/uv/)** — `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- **An Anthropic API key** — get one at [console.anthropic.com](https://console.anthropic.com/)
+- **An Anthropic API key** — get one at [platform.claude.com](https://platform.claude.com/settings/keys)
 - **Node.js 20+** — *only* for the steps that spawn `npx @modelcontextprotocol/server-filesystem@2026.8.31` as an external MCP server (steps 2, 5, 6 and 11). The Agent SDK itself does **not** need it. The server version is **pinned in the `npx` args**: `npx -y <pkg>` with no version fetches whatever is newest at run time, so without a pin two people running the same step on different days can get different servers.
-- *(For step 11)* — a running [Ollama](https://ollama.ai) server with a tool-capable model pulled
+- *(For step 11)* — a running [Ollama](https://ollama.com) server with a tool-capable model pulled
 
-> **No separate Claude Code CLI install needed.** The Agent SDK is a [standalone package](https://docs.claude.com/en/api/agent-sdk/overview) — `claude-agent-sdk` ships the Claude Code CLI it runs under the hood (a native binary, bundled in the wheel), so you do **not** need to `npm install -g @anthropic-ai/claude-code`. The SDK finds and uses the bundled binary automatically. If it can't be located on your platform, see gotcha 9.
+> **No separate Claude Code CLI install needed.** The Agent SDK is a [standalone package](https://code.claude.com/docs/en/agent-sdk/overview) — `claude-agent-sdk` ships the Claude Code CLI it runs under the hood (a native binary, bundled in the wheel), so you do **not** need to `npm install -g @anthropic-ai/claude-code`. The SDK finds and uses the bundled binary automatically. If it can't be located on your platform, see gotcha 9.
 
 ## How the env works
 
@@ -85,10 +85,11 @@ A suggested order through the steps, grouped by what each phase builds. Skip aro
 3. **An MCP tool doesn't fire** — list it (or a wildcard) in `allowed_tools`. Tools are named `mcp__<server-name>__<tool-name>`. Built-in tools use bare names (`Read`, `Write`, ...). You may also see an extra `ToolSearch` call before it: MCP tool schemas are deferred rather than all pasted into the prompt, so the model looks them up by name first.
 4. **The agent used a built-in tool instead of your MCP server** — `allowed_tools` is **auto-approve, not a sandbox**. It grants tools; it never removes any. The built-in `Write`/`Edit`/`Bash` always exist, and current models prefer them for file work. Add `disallowed_tools=["Write", "Edit", "Bash"]` to force the MCP route. See [step-2](./step-2-external-mcp).
 5. **A file landed somewhere unexpected** — the filesystem MCP server implements the MCP **roots** protocol: it asks the client which directories it may touch and replaces its own CLI argument with the answer. The Agent SDK answers with `cwd`, so set `cwd` to your sandbox or the sandbox silently widens to the whole project. See [step-2](./step-2-external-mcp); [step-11](./step-11-pydanticai-ollama) mounts the same server with a client that *doesn't* advertise roots.
-6. **Cost printed two or three times, or output cut short** — a stream can contain **several** `result` messages. `result` means "a turn ended", not "the run is over": background subagents and multi-turn work each produce one. Accumulate and print after the loop instead of `if result: print(cost); break`. See [step-7](./step-7-subagents).
+6. **Cost printed two or three times, cost too high, or output cut short** — a stream can contain **several** `result` messages. `result` means "a turn ended", not "the run is over", and `total_cost_usd` on each one is the running total for the whole call. Keep the latest and print after the loop; don't add them up, and don't `if result: print(cost); break`. See [step-7](./step-7-subagents).
 7. **Python too old / `uv` missing** — the workspace requires Python 3.11+ and uv 0.5+. Check with `python3 --version` and `uv --version`.
 8. **`ModuleNotFoundError: No module named 'claude_agent_sdk'`** — you ran `uv sync` instead of `uv sync --all-packages`. The root project has no deps of its own; you need the `--all-packages` flag to install the workspace members.
 9. **`Error: command not found: claude` (or `CLINotFoundError`)** — `claude-agent-sdk` ships a bundled Claude Code CLI and uses it automatically, so this should be rare. If the bundled binary can't be found on your platform, install the CLI globally with `npm install -g @anthropic-ai/claude-code`, or point the SDK at one with `ClaudeAgentOptions(cli_path=...)`.
+10. **An unlisted tool ran, or a step costs far more than expected** — your `~/.claude` settings are in play. With `permission_mode` and `setting_sources` both unset, a `permissions.defaultMode` of `auto` applies and tools the workshop expects to be denied will run; user plugins and hooks add cost too. The steps set `setting_sources=[]` (no skill) or `["project"]` (skill) so your laptop doesn't change the outcome. An agent depends on the machine unless you pin it.
 
 ## "Can I just run one step in isolation?"
 
@@ -104,11 +105,11 @@ That'll work because the step's `pyproject.toml` is self-contained. The shared w
 
 ## Further reading
 
-- [Agent SDK Overview](https://docs.claude.com/en/api/agent-sdk/overview)
-- [Python SDK Reference](https://docs.claude.com/en/api/agent-sdk/python)
+- [Agent SDK Overview](https://code.claude.com/docs/en/agent-sdk/overview)
+- [Python SDK Reference](https://code.claude.com/docs/en/agent-sdk/python)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Skills documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
-- [PydanticAI](https://ai.pydantic.dev/) — used as the alternative SDK in step 11
+- [Skills documentation](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
+- [PydanticAI](https://pydantic.dev/docs/ai/overview/) — used as the alternative SDK in step 11
 - For **MCP Apps / UI resources**, see our separate MCP course material — the rendering story is host-side, not SDK-side, so it lives there.
 
 

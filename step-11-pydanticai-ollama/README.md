@@ -15,7 +15,7 @@ This step is the **contrast lesson**: agent concepts are portable across SDKs. O
 | MCP **roots** | Advertises roots, so the server's CLI sandbox arg is overridden | Does **not** advertise roots by default, so the server keeps its CLI arg |
 | Custom tools | `@tool(...)` + `create_sdk_mcp_server(...)` | `@agent.tool_plain` decorator on a Python function |
 | Skills | Auto-discovered from `.claude/skills/` via `setting_sources` | **Not built-in** — `skills.py` loads them manually |
-| Model | Claude (`claude-sonnet-5`) | Any Ollama model (`llama3.3`, `qwen2.5-coder`, ...) |
+| Model | Claude (`claude-sonnet-5-5`) | Any Ollama model (`llama3.3`, `qwen2.5-coder`, ...) |
 
 ## Prerequisites
 
@@ -123,5 +123,5 @@ For a workshop, the Claude Agent SDK is the right teaching default — it lets t
 
 - Swap `qwen2.5-coder:14b` and observe whether the model uses the skill correctly. Then try a 7B model and watch it drift.
 - Add a second skill (`code-explainer`?) and prompt for code review. Notice the model has to choose between two skills based only on description matching.
-- Replace `OpenAIChatModel(..., provider=OllamaProvider(...))` with `AnthropicModel("claude-sonnet-5")` and rerun. Same code, much better results — that's the model quality gap.
+- Replace `OpenAIChatModel(..., provider=OllamaProvider(...))` with `AnthropicModel("claude-sonnet-5-5")` and rerun. Same code, much better results — that's the model quality gap.
 - Advertise MCP roots: pass `roots=[str(SANDBOX_DIR)]` to `FastMCPClient(...)` and re-run. The server's startup line changes, because the client is now the one deciding what it may touch. That single argument is the whole difference between this step and step 2.

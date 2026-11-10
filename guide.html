@@ -732,11 +732,11 @@
           </div>
           <div>
             <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">An Anthropic API key</strong>
-            Create one at <a href="https://console.anthropic.com/settings/keys" style="color: var(--clay); text-decoration: underline;">console.anthropic.com</a> → API&nbsp;Keys. The steps make real API calls, so add a little <a href="https://console.anthropic.com/settings/billing" style="color: var(--clay); text-decoration: underline;">billing credit</a> — a dollar or two covers the whole workshop.
+            Create one at <a href="https://platform.claude.com/settings/keys" style="color: var(--clay); text-decoration: underline;">platform.claude.com</a> → API&nbsp;Keys. The steps make real API calls, so add a little <a href="https://platform.claude.com/settings/billing" style="color: var(--clay); text-decoration: underline;">billing credit</a> — a dollar or two covers the whole workshop.
           </div>
           <div>
             <strong style="display: block; font-family: var(--serif); font-weight: 600; margin-bottom: 4px;">No separate CLI install</strong>
-            The Agent SDK is a <a href="https://docs.claude.com/en/api/agent-sdk/overview" style="color: var(--clay); text-decoration: underline;">standalone package</a>: <code>claude-agent-sdk</code> ships a bundled Claude&nbsp;Code binary and uses it automatically — no <code>npm install -g</code>. Node 20+ is needed <em>only</em> for the <code>npx</code> filesystem MCP server in steps 2, 5, 6 and 11 — and its version is pinned in the <code>npx</code> args, so everyone runs the same server.
+            The Agent SDK is a <a href="https://code.claude.com/docs/en/agent-sdk/overview" style="color: var(--clay); text-decoration: underline;">standalone package</a>: <code>claude-agent-sdk</code> ships a bundled Claude&nbsp;Code binary and uses it automatically — no <code>npm install -g</code>. Node 20+ is needed <em>only</em> for the <code>npx</code> filesystem MCP server in steps 2, 5, 6 and 11 — and its version is pinned in the <code>npx</code> args, so everyone runs the same server.
           </div>
         </div>
       </div>
@@ -935,7 +935,7 @@ ANTHROPIC_API_KEY=<span class="str">sk-ant-...</span>
 
 client = AsyncAnthropic()
 response = <span class="kw">await</span> client.messages.create(
-    model=<span class="str">"claude-sonnet-5"</span>,
+    model=<span class="str">"claude-sonnet-5-5"</span>,
     max_tokens=1024,
     messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain what an AI agent is in three sentences."</span>}],
 )</div>
@@ -967,7 +967,10 @@ response = <span class="kw">await</span> client.messages.create(
 <div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> (AssistantMessage, ClaudeAgentOptions,
                               ResultMessage, TextBlock, query)
 
-options = ClaudeAgentOptions(model=<span class="str">"claude-sonnet-5"</span>)
+options = ClaudeAgentOptions(
+    model=<span class="str">"claude-sonnet-5-5"</span>,
+    setting_sources=[],   <span class="cmt"># ignore ~/.claude so this run depends only on this file</span>
+)
 <span class="kw">async for</span> message <span class="kw">in</span> query(prompt=<span class="str">"Explain what an AI agent is."</span>, options=options):
     <span class="kw">if</span> isinstance(message, AssistantMessage):
         <span class="kw">for</span> block <span class="kw">in</span> message.content:
@@ -1004,7 +1007,7 @@ options = ClaudeAgentOptions(model=<span class="str">"claude-sonnet-5"</span>)
     <span class="str">"fs"</span>: {  <span class="cmt"># the key becomes the tool prefix: mcp__fs__*</span>
         <span class="str">"type"</span>: <span class="str">"stdio"</span>,
         <span class="str">"command"</span>: <span class="str">"npx"</span>,
-        <span class="str">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"@modelcontextprotocol/server-filesystem"</span>, str(SANDBOX_DIR)],
+        <span class="str">"args"</span>: [<span class="str">"-y"</span>, <span class="str">"@modelcontextprotocol/server-filesystem@2026.8.31"</span>, str(SANDBOX_DIR)],
     },
 },
 allowed_tools=[
@@ -1037,7 +1040,8 @@ allowed_tools=[
           <div class="run"><span class="prompt">$</span> make step-2b <button onclick="copyCmd(this,'make step-2b')">copy</button></div>
           <h5>The change from step 2</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-5"</span>,
+    model=<span class="str">"claude-sonnet-5-5"</span>,
+    setting_sources=[],
     allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Write"</span>, <span class="str">"Bash"</span>],  <span class="cmt"># bare names, no mcp__ prefix</span>
     add_dirs=[SANDBOX_DIR],                     <span class="cmt"># grants file-tool access outside cwd</span>
 )</div>
@@ -1139,7 +1143,8 @@ weather_server = create_sdk_mcp_server(name=<span class="str">"weather"</span>, 
           <div class="run"><span class="prompt">$</span> make step-4 <button onclick="copyCmd(this,'make step-4')">copy</button></div>
           <h5>The whole "code" change</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-5"</span>,
+    model=<span class="str">"claude-sonnet-5-5"</span>,
+    cwd=str(STEP_DIR),                     <span class="cmt"># skills are found under cwd; make runs from the repo root</span>
     setting_sources=[<span class="str">"project"</span>],   <span class="cmt"># scope discovery to this folder</span>
 )</div>
           <h5>Read the small print</h5>
@@ -1226,7 +1231,7 @@ session_id: str | None = None
           <div class="stepnum">7<span class="sub">subagents</span></div>
           <div class="summary-body">
             <div class="ttl">Delegate to specialist subagents</div>
-            <p class="desc">A coordinator agent dispatches to a <code>code-reviewer</code> and a <code>test-planner</code> via the built-in <code>Task</code> tool. Each subagent has its own prompt and toolset.</p>
+            <p class="desc">A coordinator agent dispatches to a <code>code-reviewer</code> and a <code>test-planner</code> via the built-in <code>Agent</code> tool (alias <code>Task</code>). Each subagent has its own prompt and toolset.</p>
             <div class="tags">
               <span class="tag cat-control">control</span>
               <span class="tag">agents</span>
@@ -1243,7 +1248,8 @@ session_id: str | None = None
 <div class="codeblock"><span class="kw">from</span> claude_agent_sdk <span class="kw">import</span> AgentDefinition
 
 options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-5"</span>,
+    model=<span class="str">"claude-sonnet-5-5"</span>,
+    setting_sources=[],
     allowed_tools=[<span class="str">"Read"</span>, <span class="str">"Agent"</span>, <span class="str">"Task"</span>],   <span class="cmt"># Agent (alias Task) = how the coordinator dispatches</span>
     agents={
         <span class="str">"code-reviewer"</span>: AgentDefinition(
@@ -1289,14 +1295,15 @@ options = ClaudeAgentOptions(
         }}
     <span class="kw">return</span> {}   <span class="cmt"># continue normally</span>
 
-options = ClaudeAgentOptions(hooks={<span class="str">"PreToolUse"</span>: [
+options = ClaudeAgentOptions(setting_sources=[], hooks={<span class="str">"PreToolUse"</span>: [
     HookMatcher(hooks=[log_tool_calls]),                   <span class="cmt"># every tool</span>
-    HookMatcher(matcher=<span class="str">"Bash"</span>, hooks=[block_dangerous_bash]),  <span class="cmt"># Bash only</span>
+    HookMatcher(matcher=<span class="str">"Bash"</span>, hooks=[block_dangerous_bash], on_failure=<span class="str">"block"</span>),  <span class="cmt"># Bash only; a crash blocks</span>
 ]})</div>
           <h5>What you'll see</h5>
           <p>The agent writes <code>notes.txt</code>, then tries <code>rm notes.txt</code>. The hook prints its block line, the deny short-circuits before the shell ever runs, and the agent gets a tool result it can recover from.</p>
           <h5>Heads-up</h5>
           <p>The hook return value uses camelCase keys (<code>hookSpecificOutput</code>, <code>permissionDecision</code>) — the same wire format as the TypeScript SDK. Empty <code>{}</code> means continue.</p>
+          <p><strong>Hooks fail open:</strong> a callback that raises or returns <code>None</code> doesn't stop the tool, it runs anyway. A safety hook needs <code>on_failure="block"</code> on its matcher (SDK 0.2.177+): a failing callback then blocks the call.</p>
         </div>
       </details>
 
@@ -1327,19 +1334,21 @@ options = ClaudeAgentOptions(hooks={<span class="str">"PreToolUse"</span>: [
     <span class="kw">return</span> PermissionResultDeny(message=<span class="acc">f"User declined {tool_name}. Don't retry."</span>)
 
 options = ClaudeAgentOptions(
-    allowed_tools=[],            <span class="cmt"># empty so EVERY call routes through can_use_tool</span>
+    allowed_tools=[],            <span class="cmt"># nothing pre-approved; calls that need approval reach can_use_tool</span>
     can_use_tool=can_use_tool,
-    permission_mode=<span class="str">"default"</span>,   <span class="cmt"># default / acceptEdits / plan / dontAsk / bypassPermissions</span>
+    permission_mode=<span class="str">"default"</span>,   <span class="cmt"># default / acceptEdits / plan / dontAsk / auto / bypassPermissions</span>
 )</div>
           <h5>Decision order</h5>
           <ul>
-            <li>Is the tool in <code>allowed_tools</code>? — auto-run</li>
-            <li>Do <code>PreToolUse</code> hooks say deny? — block (step 8)</li>
-            <li>Else, call <code>can_use_tool</code> if present</li>
-            <li>Else default to deny</li>
+            <li><code>PreToolUse</code> hooks — can deny outright (step 8)</li>
+            <li>Deny rules — <code>disallowed_tools</code> and settings files</li>
+            <li>Ask rules — from settings files</li>
+            <li>Permission mode — <code>acceptEdits</code>, <code>bypassPermissions</code>, <code>plan</code>, <code>auto</code></li>
+            <li>Allow rules — <code>allowed_tools</code>; read-only work in your project is approved here too</li>
+            <li><code>can_use_tool</code> if nothing above decided, else deny</li>
           </ul>
           <h5>Heads-up</h5>
-          <p><code>can_use_tool</code> only returns allow/deny — the "ask" outcome belongs to <em>hook</em> output, not this callback.</p>
+          <p><code>can_use_tool</code> only returns allow/deny — the "ask" outcome belongs to <em>hook</em> output, not this callback. Read-only calls like <code>Read</code> and <code>ls</code> never reach it, so expect a prompt for the write and not for the read-back.</p>
         </div>
       </details>
 
@@ -1364,7 +1373,7 @@ options = ClaudeAgentOptions(
           <div class="run"><span class="prompt">$</span> make step-10 <button onclick="copyCmd(this,'make step-10')">copy</button></div>
           <h5>The whole thing</h5>
 <div class="codeblock">options = ClaudeAgentOptions(
-    model=<span class="str">"claude-sonnet-5"</span>,
+    model=<span class="str">"claude-sonnet-5-5"</span>,
     allowed_tools=[<span class="str">"Glob"</span>, <span class="str">"Read"</span>, <span class="str">"Write"</span>],     <span class="cmt"># auto-approve these</span>
     disallowed_tools=[<span class="str">"Bash"</span>],                  <span class="cmt"># actually remove the shell</span>
     add_dirs=[str(TRANSCRIPTS_DIR), str(OUTPUT_DIR)],
@@ -1441,9 +1450,9 @@ agent = Agent(model, system_prompt=system_prompt)   <span class="cmt"># skills i
     </div>
     <div>
       <a href="./README.md">README</a> &nbsp;·&nbsp;
-      <a href="https://gritai.no">GritAI</a> &nbsp;·&nbsp;
-      <a href="https://docs.claude.com/en/api/agent-sdk/overview">SDK overview</a> &nbsp;·&nbsp;
-      <a href="https://docs.claude.com/en/api/agent-sdk/python">Python reference</a> &nbsp;·&nbsp;
+      <a href="https://gritai.studio">GritAI</a> &nbsp;·&nbsp;
+      <a href="https://code.claude.com/docs/en/agent-sdk/overview">SDK overview</a> &nbsp;·&nbsp;
+      <a href="https://code.claude.com/docs/en/agent-sdk/python">Python reference</a> &nbsp;·&nbsp;
       <a href="https://modelcontextprotocol.io/">MCP</a>
     </div>
   </footer>

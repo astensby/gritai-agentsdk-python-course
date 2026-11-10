@@ -29,11 +29,14 @@ SANDBOX_DIR = (Path(__file__).resolve().parent / "sandbox").resolve()
 async def main() -> None:
     prompt = (
         f"Create a file called 'limerick.txt' in {SANDBOX_DIR} with a short "
-        f"limerick about Python. Then read it back to confirm."
+        f"limerick about Python, using the Write tool. Then read it back with the "
+        f"Read tool to confirm."
     )
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Ignore ~/.claude so this run depends only on this file. See step 1.
+        setting_sources=[],
         # Just whitelist the built-in tools by their bare names. No MCP at all.
         # (Tools without `mcp__` prefix are built-ins.)
         allowed_tools=["Read", "Write", "Bash"],
@@ -43,7 +46,8 @@ async def main() -> None:
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can
-    # carry several. Accumulate, print once. (Step 7 shows why.)
+    # carry several, and `total_cost_usd` on each one is the running total for
+    # the whole call. Keep the latest, print once. (Step 7 shows why.)
     total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
@@ -55,7 +59,7 @@ async def main() -> None:
                     summary = str(block.input)[:100]
                     print(f"\n[tool call] {block.name}({summary})")
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
     print(f"Check {SANDBOX_DIR}/limerick.txt")
