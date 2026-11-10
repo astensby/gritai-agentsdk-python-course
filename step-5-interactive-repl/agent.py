@@ -101,7 +101,7 @@ def build_agent_options() -> ClaudeAgentOptions:
     sandbox_dir = (Path(__file__).parent / "sandbox").resolve()
 
     return ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
         # The MCP roots handshake answers with `cwd`, so point it at the sandbox
         # or the filesystem server's own CLI argument gets overridden and the
         # agent gets the whole project. Full explanation in step 2's docstring.

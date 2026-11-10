@@ -51,6 +51,8 @@ The whole-message `AssistantMessage` and `ResultMessage` events still arrive too
 
 Each browser tab tracks its own `sessionId`. The first SSE event of every response is `{"type":"session","sessionId":"..."}` — the client saves it and sends it on the next `POST /api/chat` as `{"sessionId": "..."}`. The route forwards that into `ClaudeAgentOptions.resume`, which makes the SDK continue the conversation instead of starting fresh.
 
+If you add cost display, note that `total_cost_usd` on a resumed session is cumulative, so don't sum it across requests.
+
 ## One Python-specific detail
 
 The Makefile launches the app via:
@@ -73,7 +75,7 @@ uv run --env-file=.env --package step-6-web-chat \
 
 ## Gotchas
 
-- The Agent SDK shells out to `claude` (and to `npx` for the filesystem MCP server) — running on a host without Node/npm available won't work.
+- The Agent SDK runs the Claude Code binary bundled in its wheel, so no global `claude` install is needed. The filesystem MCP server still launches through `npx`, so a host without Node/npm can't start it.
 - SSE is buffered by some reverse proxies. The route sets `Cache-Control: no-cache, no-transform` and `X-Accel-Buffering: no`; if you put it behind nginx, double-check buffering is off.
 - `sandbox/` exists so the filesystem MCP server has somewhere safe to read/write. The path is anchored to the step folder via `Path(__file__).parent.parent`, so it works regardless of where you launch uvicorn from.
 

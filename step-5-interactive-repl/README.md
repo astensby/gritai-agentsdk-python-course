@@ -48,7 +48,9 @@ while True:
 
 On the first turn there's no session yet; the SDK creates one and emits its ID in the `system: init` message. From then on we pass `resume=session_id` so the SDK rehydrates the full prior conversation from its session log.
 
-We use `dataclasses.replace()` to make a per-turn copy of the options with `resume` set — `ClaudeAgentOptions` is a frozen-ish dataclass, so we don't mutate the shared instance.
+We use `dataclasses.replace()` to make a per-turn copy of the options with `resume` set, so the shared base options stay untouched. (`ClaudeAgentOptions` is an ordinary mutable dataclass; step 6 sets fields on a fresh instance per request instead.)
+
+If you add cost tracking here, don't add the figures up across turns: `total_cost_usd` on a resumed session is cumulative, so each turn already includes the ones before it.
 
 ## Advanced: streaming-input mode
 
@@ -63,6 +65,8 @@ In `main_streaming.py` we keep **one** `query()` call alive for the whole chat b
 | Number of `query()` calls | one per turn | one for the whole session |
 | Mental model | request/response loop | single long-lived stream |
 | Best fit | clearest for teaching, REPLs, HTTP request handlers | already async/streaming environments |
+
+One thing the streaming variant has to handle itself: the SDK pulls the next message from your generator as soon as it has taken the current one, so a naive loop prints `you > ` over the reply. `main_streaming.py` waits on an `asyncio.Event` until the turn's `ResultMessage` arrives.
 
 For step 6 (FastAPI) we use the `resume` pattern because each HTTP request is naturally its own `query()` call.
 

@@ -9,8 +9,8 @@ The skill for this step lives at:
 
     step-4-skills/.claude/skills/meeting-notes-formatter/SKILL.md
 
-The SDK auto-discovers any `.claude/skills/*/SKILL.md` file in the project. At
-decision time Claude reads each skill's YAML frontmatter `description` and
+The SDK auto-discovers any `.claude/skills/*/SKILL.md` under `cwd` or its parent
+directories. At decision time Claude reads each skill's YAML frontmatter `description` and
 invokes the skill autonomously when the prompt matches.
 
 The one thing that's new vs step 3 is this option:
@@ -36,14 +36,18 @@ do: `skills=["*"]` is rejected; the wildcard spelling is `skills="all"`.)
 """
 
 import asyncio
+from pathlib import Path
 
 from claude_agent_sdk import (
     AssistantMessage,
     ClaudeAgentOptions,
     ResultMessage,
     TextBlock,
+    ToolUseBlock,
     query,
 )
+
+STEP_DIR = Path(__file__).resolve().parent
 
 RAW_NOTES = """
 Quick sync about the Q3 launch.
@@ -59,7 +63,11 @@ We also touched on the Q4 roadmap but parked it for next time.
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Skills are found under `cwd` and its parents. `make step-4` runs from the
+        # repo root, which has no .claude/skills/, so without this the skill never
+        # loads: no error, the agent just improvises its own format.
+        cwd=str(STEP_DIR),
         # Scope skill discovery to this project's .claude/ folder. See top-of-file
         # comment for the full reasoning — default is "load all sources", we
         # narrow it to "project" for reproducibility.
@@ -67,7 +75,8 @@ async def main() -> None:
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can
-    # carry several. Accumulate, print once. (Step 7 shows why.)
+    # carry several, and `total_cost_usd` on each one is the running total for
+    # the whole call. Keep the latest, print once. (Step 7 shows why.)
     total_cost = 0.0
 
     async for message in query(
@@ -78,8 +87,11 @@ async def main() -> None:
             for block in message.content:
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
+                elif isinstance(block, ToolUseBlock):
+                    # Watch for the `Skill` tool: this is the skill firing.
+                    print(f"\n[tool call] {block.name}({block.input})")
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
 

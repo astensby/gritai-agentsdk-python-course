@@ -112,7 +112,7 @@ def build_agent_options() -> ClaudeAgentOptions:
     sandbox_dir = project_root / "sandbox"
 
     return ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
         # Point `cwd` at the sandbox, not the project root. The MCP roots
         # handshake answers with `cwd`, and the filesystem server REPLACES its
         # own CLI argument with whatever it gets back — so a cwd of the project

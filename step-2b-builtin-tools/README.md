@@ -24,7 +24,7 @@ Same outcome as step 2 (a file gets created in `./sandbox/`), but with zero MCP 
 | Local file I/O (`Read`, `Write`, `Edit`) | Calling external services (GitHub, Slack, Postgres, ...) |
 | Running shell commands (`Bash`) | Wrapping your own business logic as a tool (step 3) |
 | Searching the codebase (`Grep`, `Glob`) | Tools that need to live in their own process |
-| Delegating to subagents (`Task`, see step 7) | Reusing the same tool across multiple agents/languages |
+| Delegating to subagents (`Agent`, see step 7) | Reusing the same tool across multiple agents/languages |
 
 The built-in toolset is essentially the same toolbox you use when you talk to Claude Code on the command line. Same `Read`, same `Write`, same `Bash`.
 
@@ -38,11 +38,12 @@ The built-in toolset is essentially the same toolbox you use when you talk to Cl
 | `Bash` | Run a shell command. |
 | `Glob` | Find files by pattern. |
 | `Grep` | Search file contents with regex. |
-| `Task` | Delegate to a subagent (see [step 7](../step-7-subagents)). |
+| `Agent` | Delegate to a subagent (see [step 7](../step-7-subagents)). Older CLIs called it `Task`, still accepted as an alias. |
 | `WebFetch`, `WebSearch` | Fetch a URL or search the web. |
-| `TodoWrite` | Manage a todo list during the agent loop. |
 
-See [the Agent SDK docs](https://docs.claude.com/en/api/agent-sdk/python) for the full list and their input shapes.
+The to-do tools (`TodoWrite`, `TaskCreate`) aren't in the default set on Sonnet 5 and later, so don't plan around them.
+
+See [the Agent SDK docs](https://code.claude.com/docs/en/agent-sdk/python) for the full list and their input shapes.
 
 ## The `add_dirs` gotcha
 
@@ -50,11 +51,11 @@ Built-in file tools can only operate inside the current working directory **plus
 
 ## `allowed_tools` is an auto-approve list, not a sandbox
 
-A subtle but important point: `allowed_tools` lists the tools that run **without an approval prompt**. It does **not** restrict which tools exist — a built-in like `Bash` still runs even if you leave it out. To actually *remove* a tool, use `disallowed_tools`.
+A subtle but important point: `allowed_tools` lists the tools that run **without an approval prompt**. It does **not** restrict which tools exist. Leave `Bash` out and the model can still call it: a read-only command like `ls` is approved by itself, and anything else falls through to the permission mode, which in a headless run usually means denied. To actually *remove* a tool, use `disallowed_tools`.
 
 ## Try this
 
-- **Actually block the shell:** add `disallowed_tools=["Bash"]` to the options, change the prompt to "run `ls` in the sandbox," and re-run. Now it refuses. (Just *omitting* `Bash` from `allowed_tools` is **not** enough — see the note above.)
+- **Actually block the shell:** add `disallowed_tools=["Bash"]` to the options, change the prompt to "run `ls` in the sandbox," and re-run. Now it can't. (Just *omitting* `Bash` from `allowed_tools` is **not** enough: `ls` is approved on its own. See the note above.)
 - Change the prompt to also ask the agent to `Read` the file back, then re-run and watch the `[tool call]` trace.
 - Combine built-ins and MCP in the same `allowed_tools` list — both worlds can coexist.
 

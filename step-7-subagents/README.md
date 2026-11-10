@@ -13,8 +13,9 @@ A main agent that delegates specialist work to **subagents**. This is the single
 > 1. The prompt asks for `run_in_background: false`.
 > 2. The message loop skips anything carrying `parent_tool_use_id` — that's how you tell a
 >    subagent's chatter from the coordinator's.
-> 3. Cost is accumulated and printed **after** the stream, because `result` means "a turn ended",
->    not "the run is over".
+> 3. Cost comes from the **last** `result`, printed **after** the stream. `result` means "a turn
+>    ended", not "the run is over", and `total_cost_usd` on each one is the running total for the
+>    whole call, so adding them up overcounts: results of $0.045, $0.045 and $0.053 cost $0.053.
 >
 > **Try it:** delete the `run_in_background: false` sentence from the prompt and re-run. Comparing
 > the two traces teaches background delegation and stream handling at the same time.
@@ -64,7 +65,7 @@ The main agent's system prompt is automatically augmented with a list of availab
 - **Context isolation** — a subagent's intermediate reasoning doesn't pollute the main agent's context window
 - **Specialization** — each subagent has its own focused system prompt and tool whitelist
 - **Parallelism** — the main agent can dispatch multiple subagents (in some patterns concurrently)
-- **Composition** — subagents can themselves dispatch sub-subagents (use with care)
+- **Composition** — subagents can themselves dispatch sub-subagents, up to three layers by default (use with care; `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` lowers it)
 
 ## AgentDefinition fields worth knowing
 
@@ -81,6 +82,7 @@ The main agent's system prompt is automatically augmented with a list of availab
 
 ## Gotchas
 
+- SDK sessions can also spawn **fork** subagents, which inherit the coordinator's context. If you want only the specialists you defined, add `disallowed_tools=["Agent(fork)"]`.
 - The sample file is `sample/auth.ts` — TypeScript, on purpose. The lesson is reviewing existing code; TS is what most participants encounter in the wild. The host program is still Python.
 - `add_dirs` is required to let `Read` reach files outside the script's CWD. Without it the subagents will refuse to read `auth.ts`.
 - `AgentDefinition` field names are camelCase (`disallowedTools`, `permissionMode`, ...). The rest of `ClaudeAgentOptions` is snake_case. It's a dataclass, so a wrong field name is a `TypeError` at construction — read the dataclass definition if you're adding a new one.

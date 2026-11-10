@@ -11,7 +11,7 @@ The "Claude wants to run X — allow?" pattern you've seen in Claude Code itself
 
 - The `can_use_tool` callback in `ClaudeAgentOptions`
 - The `PermissionResultAllow` / `PermissionResultDeny` shape
-- The `permission_mode` option (`default` / `acceptEdits` / `plan` / `bypassPermissions`)
+- The `permission_mode` option (`default` / `acceptEdits` / `plan` / `bypassPermissions` / `dontAsk` / `auto`)
 
 ## Run it
 
@@ -20,11 +20,11 @@ The "Claude wants to run X — allow?" pattern you've seen in Claude Code itself
 make step-9
 ```
 
-For every tool the agent wants to use, you'll see:
+For each call that needs approval you'll see the prompt below. Expect one for the write (usually `Write`, sometimes a shell command that writes), and **none** for the read-back or `ls`: read-only work inside your project is approved on its own.
 
 ```
 ┌─ Permission request ──────────────────────
-│ Claude wants to write …/pizza.txt
+│ Allow tool: Write?
 │ Input: {'file_path': '…/pizza.txt', 'content': '…'}
 └────────────────────────────────────────────
 [y]es / [n]o / [a]lways allow >
@@ -48,27 +48,31 @@ async def can_use_tool(tool_name, tool_input, context):
     )
 
 options = ClaudeAgentOptions(
-    allowed_tools=[],     # ← empty: nothing is auto-allowed
+    allowed_tools=[],     # ← empty: nothing is pre-approved by an allow rule
     can_use_tool=can_use_tool,
 )
 ```
 
-A tool call goes through this order:
+A tool call goes through this order, and the first step that decides ends it:
 
-1. **Is it in `allowed_tools`?** → run immediately
-2. **Else, do PreToolUse hooks say deny?** → block (step 8 pattern)
-3. **Else, is there a `can_use_tool` callback?** → call it, use its decision
-4. **Else** → default to deny
+1. **Hooks** — a `PreToolUse` hook can deny outright (step 8)
+2. **Deny rules** — `disallowed_tools` and settings files; holds even in `bypassPermissions`
+3. **Ask rules** — from settings files; these send the call to your callback
+4. **Permission mode** — `acceptEdits`, `bypassPermissions`, `plan` and `auto` may decide here
+5. **Allow rules** — `allowed_tools` and settings files; read-only work inside your project is also approved here
+6. **`can_use_tool`** — only if nothing above decided. With no callback, the call is denied
+
+So `allowed_tools` does not run first, and a hook that returns `allow` doesn't get past a deny rule.
 
 ## `permission_mode` cheat sheet
 
 | Mode | Behaviour |
 |---|---|
-| `default` | Route uncertain tools through `can_use_tool` |
+| `default` | No auto-approvals from the mode; calls that need approval and match no allow rule go to `can_use_tool` |
 | `acceptEdits` | Auto-allow file edits, still ask for Bash/network |
 | `plan` | Research-only mode — agent produces a plan, doesn't act |
 | `bypassPermissions` | Auto-allow everything. **Dangerous.** Requires `allow_dangerously_skip_permissions=True` |
-| `dontAsk` | Auto-deny anything not in `allowed_tools` (good for headless agents) |
+| `dontAsk` | Deny instead of prompting, without calling `can_use_tool` (good for headless agents) |
 | `auto` | A model classifier approves/denies each prompt for you |
 
 ## `PermissionResultAllow` returning `updated_input`
@@ -92,7 +96,7 @@ Useful for stripping risky flags, redacting secrets, or pinning paths.
 ## Try this
 
 - Switch to `permission_mode="plan"` and rerun. The agent produces a plan without touching the filesystem.
-- Put `Read` and `Glob` into `allowed_tools` so only the risky ones (Write, Bash) prompt.
+- Add a prompt that needs a non-read-only `Bash` command, and watch it reach the callback where `ls` didn't.
 - Wire `can_use_tool` into a Slack DM bot — same callback shape, different transport.
 
 ## Next

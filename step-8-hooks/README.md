@@ -7,6 +7,7 @@ Intercept the agent loop with pure Python async functions. Two flavours: **obser
 - The `hooks` option in `ClaudeAgentOptions`
 - `HookMatcher(matcher=..., hooks=[...])` — group of hooks bound to a tool-name matcher
 - Returning `permissionDecision: "deny"` from a PreToolUse hook to block a tool call
+- `on_failure="block"` on a matcher, so a hook that crashes stops the tool call instead of letting it through
 
 ## Run it
 
@@ -35,7 +36,7 @@ options = ClaudeAgentOptions(
     hooks={
         "PreToolUse": [
             HookMatcher(hooks=[log_tool_calls]),                  # matcher omitted = all tools
-            HookMatcher(matcher="Bash", hooks=[block_dangerous_bash]),  # matcher = tool name pattern
+            HookMatcher(matcher="Bash", hooks=[block_dangerous_bash], on_failure="block"),  # matcher = tool name pattern
         ],
     },
 )
@@ -86,7 +87,7 @@ These ten are the **complete** list — the `HookEvent` union in the SDK types. 
 |   | `allowed_tools` | `can_use_tool` | Hooks |
 |---|---|---|---|
 | **Where it lives** | Static config | Single callback | Per-event matcher groups |
-| **What it can do** | Auto-approve list | Allow / deny / ask | Allow / deny / ask / rewrite / observe |
+| **What it can do** | Auto-approve list | Allow / deny (and rewrite the input) | Allow / deny / ask / rewrite / observe |
 | **Granularity** | Per tool name | Per tool call | Per event |
 | **When to reach for it** | Coarse access control | Interactive permission UX (step 9) | Logging, auditing, safety rails, side-effects |
 
@@ -94,12 +95,14 @@ These ten are the **complete** list — the `HookEvent` union in the SDK types. 
 
 - The hook RETURN dict uses camelCase (`hookSpecificOutput`, `hookEventName`, `permissionDecision`, `permissionDecisionReason`). The `ClaudeAgentOptions` fields around it are snake_case. Easy to mix up.
 - The regex `\brm\b` is intentionally crude — it blocks plain `rm notes.txt`. A real deny rule needs more care than a substring match.
-- Hooks run in your Python process. If a hook raises, it can break the agent loop. Wrap risky work in try/except.
+- **Hooks fail open by default.** A callback that raises or returns `None` does not stop the agent: Claude Code logs the error (a long stack trace on stderr) and the tool **runs anyway**. So a safety hook needs `on_failure="block"` on its matcher, as the Bash matcher here has (SDK 0.2.177+). A failing callback then blocks the call, whatever the command was, so a broken check stops harmless commands too.
+- **`updatedInput` is validated.** Rewrites must be valid input for that tool; unknown keys are dropped.
 
 ## Try this
 
 - Add a `PostToolUse` hook that records latency per tool call to a CSV.
 - Use `updatedInput` to redact a secret from any `Bash` command before it runs.
+- Add `raise RuntimeError("down")` as the first line of `block_dangerous_bash` and run it. You get a stack trace, every Bash call is blocked, and the agent tells you nothing ran. Then remove `on_failure="block"` and run it again: same stack trace, but the commands run, `rm` included. The sandbox can look empty both times, so read what the agent reports.
 - Add a `Stop` hook that prints a "done" banner when the agent finishes.
 
 ## Next

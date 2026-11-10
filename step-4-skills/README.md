@@ -28,7 +28,9 @@ step-4-skills/
 └── main.py
 ```
 
-The SDK auto-discovers any `.claude/skills/*/SKILL.md` files in the project. Claude reads each skill's frontmatter `description` at decision time and invokes the skill autonomously when a user prompt matches.
+The SDK auto-discovers any `.claude/skills/*/SKILL.md` under its `cwd` or a parent directory. Claude reads each skill's frontmatter `description` at decision time and invokes the skill autonomously when a user prompt matches.
+
+> **`cwd` matters.** `make step-4` launches from the repo root, which has no `.claude/skills/`. Without `cwd=str(STEP_DIR)` in `main.py` the skill never loads: no error, the run exits 0, and the agent writes its own format. The tell is in the trace, where you should see `[tool call] Skill(...)`.
 
 ## What `setting_sources` does
 
@@ -40,7 +42,7 @@ options = ClaudeAgentOptions(
 )
 ```
 
-The SDK default is to load **all** sources (`user`, `project`, `local`), so `.claude/skills/` already loads even if you omit the option. We pass `["project"]` on purpose: workshop runs then depend only on the skill shipped in this folder, not on whatever you happen to have in your personal `~/.claude`. To turn filesystem settings (and skill discovery) **off**, pass `[]` — that's the SDK's isolation mode.
+The SDK default is to load **all** sources (`user`, `project`, `local`), so `.claude/skills/` already loads even if you omit the option. We pass `["project"]` on purpose: workshop runs then depend only on the skill shipped in this folder, not on whatever you happen to have in your personal `~/.claude`. To turn filesystem settings (and skill discovery) **off**, pass `[]` — that's the SDK's isolation mode, and it's what the steps without a skill use, so your `~/.claude` can't change how they behave.
 
 ## Skill anatomy
 
@@ -67,6 +69,7 @@ Two things matter most:
 
 ## Try this
 
+- Delete the `cwd=` line and run `make step-4`. The skill silently disappears; note there's no `Skill` call in the trace.
 - Set `setting_sources=[]` (isolation mode). The skill no longer loads and the agent improvises its own format. Switch back to `["project"]` (or remove the line) and the skill returns. (Omitting the option and `["project"]` both load the skill; only `[]` disables it.)
 - Edit `SKILL.md` to add a `## Risks` section to the template. Rerun. The skill output changes.
 - Add a second skill (e.g., `code-review-formatter`) and prompt for code review. The agent picks the right one based on `description`.

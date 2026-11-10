@@ -11,10 +11,11 @@ Two new ClaudeAgentOptions fields earn their keep here:
   * mcp_servers — a dict of MCP server configs. The KEY ("fs" below) becomes
     part of the tool name the model sees: tools are auto-namespaced as
     `mcp__fs__<tool>`.
-  * allowed_tools — the mandatory whitelist for MCP tools. The SDK denies
-    all MCP tools by default; you MUST opt them in. Wildcards work
-    (`mcp__fs__*`); explicit names give you tighter principle-of-least-
-    privilege. We list the ones this step needs.
+  * allowed_tools — the auto-approve list. MCP tools aren't pre-approved, and
+    a headless run has nobody to approve them, so an unlisted call comes back
+    denied. Wildcards work (`mcp__fs__*`, scoped to that one server); explicit
+    names give you tighter principle-of-least-privilege. We list the ones
+    this step needs.
 
 *** TWO TRAPS THAT WILL SILENTLY BREAK THIS STEP. ***
 
@@ -69,7 +70,9 @@ SANDBOX_DIR = (Path(__file__).parent / "sandbox").resolve()
 
 async def main() -> None:
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
+        # Ignore ~/.claude so this run depends only on this file. See step 1.
+        setting_sources=[],
         # The MCP roots handshake (see docstring) answers with `cwd`, so point
         # it at the sandbox. Without this the server's CLI argument is ignored
         # and the agent gets the whole project.
@@ -95,7 +98,7 @@ async def main() -> None:
             },
         },
         # *** This is the line participants most commonly forget. ***
-        # MCP tools are denied by default. You MUST whitelist them.
+        # MCP tools aren't pre-approved, so without this every call is denied.
         # Wildcards work (`mcp__fs__*`). Explicit names give you tighter
         # principle-of-least-privilege. We list the ones this step needs.
         # Note: this server now prefers `read_text_file` and marks `read_file`
@@ -130,7 +133,8 @@ async def main() -> None:
     )
 
     # `result` means "a turn ended", not "the run is over" — a stream can carry
-    # several. Accumulate, print once. (Step 7 is where this really bites.)
+    # several, and `total_cost_usd` on each one is the running total for the
+    # whole call. Keep the latest, print once. (Step 7 is where this really bites.)
     total_cost = 0.0
 
     async for message in query(prompt=prompt, options=options):
@@ -142,7 +146,7 @@ async def main() -> None:
                     # Useful while learning: see every tool the agent decides to call.
                     print(f"\n[tool call] {block.name}({block.input})")
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
     print(f"Check {SANDBOX_DIR} — the file should be there.")

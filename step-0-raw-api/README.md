@@ -25,8 +25,9 @@ You'll see the response, then token counts and a stop reason.
 client = AsyncAnthropic()
 
 response = await client.messages.create(
-    model="claude-sonnet-5",
-    max_tokens=1024,
+    model="claude-sonnet-5-5",
+    max_tokens=4096,                   # leaves headroom: thinking tokens count against this
+    output_config={"effort": "low"},   # the cheapest cost lever you have
     messages=[
         {"role": "user", "content": "Explain what an AI agent is in three sentences."},
     ],

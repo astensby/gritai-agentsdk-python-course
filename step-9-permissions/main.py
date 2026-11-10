@@ -7,9 +7,10 @@ run X — allow?" prompt you've seen in Claude Code itself.
 Whereas:
   - `allowed_tools` is a static whitelist
   - PreToolUse hooks are programmatic (deny on a regex, etc.)
-can_use_tool is a single async callback the SDK calls before EVERY tool
-use that isn't already covered by allowed_tools — and you can ask the
-human whatever you want before deciding.
+can_use_tool is a single async callback for the calls nothing earlier has
+already decided. Hooks, deny rules, ask rules, the permission mode and allow
+rules all run first, and read-only work inside your project (Read, `ls`) is
+approved on its own, so this fires for the calls that actually need a human.
 
 Other relevant permission_mode values:
   "default"            — ask via can_use_tool (what we use)
@@ -75,11 +76,12 @@ async def can_use_tool(tool_name, tool_input, context):
 
 async def main():
     options = ClaudeAgentOptions(
-        model="claude-sonnet-5",
-        # NOTE: we deliberately leave allowed_tools empty so EVERY tool call
-        # routes through can_use_tool. In a real app you'd allowed_tools the
-        # cheap/safe tools (Read, Glob, Grep) and only prompt for the risky
-        # ones (Write, Edit, Bash).
+        model="claude-sonnet-5-5",
+        # NOTE: we deliberately leave allowed_tools empty so nothing is
+        # pre-approved. Even so, only calls that need approval reach the
+        # callback: expect a prompt for the write, and none for the read-back
+        # or `ls`, which are approved on their own. In a real app you'd list the
+        # cheap/safe tools here and let the risky ones prompt.
         allowed_tools=[],
         add_dirs=[str(SANDBOX_DIR)],
         can_use_tool=can_use_tool,
@@ -104,7 +106,7 @@ async def main():
                 if isinstance(block, TextBlock):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
-            total_cost += message.total_cost_usd or 0.0
+            total_cost = message.total_cost_usd or total_cost
 
     print(f"\n\n---\nCost: ${total_cost:.6f}")
 
